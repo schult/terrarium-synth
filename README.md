@@ -6,7 +6,10 @@ in a [PedalPCB Terrarium](https://www.pedalpcb.com/product/pcb351/).
 
 ## Build
 
-    mkdir build
-    cd build
-    cmake -GNinja -DTOOLCHAIN_PREFIX=/opt/homebrew -DCMAKE_TOOLCHAIN_FILE=lib/libDaisy/cmake/toolchains/stm32h750xx.cmake ..
-    ninja
+    cmake \
+        -GNinja \
+        -DTOOLCHAIN_PREFIX=/opt/homebrew \
+        -DCMAKE_TOOLCHAIN_FILE=lib/libDaisy/cmake/toolchains/stm32h750xx.cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -B build .
+    cmake --build build
