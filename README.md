@@ -1,5 +1,11 @@
 # SynthPedal
 
+This is firmware for a pitch-tracking synthesizer effect pedal. It runs on an
+[Electro-Smith Daisy Seed](https://www.electro-smith.com/daisy/daisy) mounted
+in a [PedalPCB Terrarium](https://www.pedalpcb.com/product/pcb351/).
+
+## Build
+
     mkdir build
     cd build
     cmake -GNinja -DTOOLCHAIN_PREFIX=/opt/homebrew -DCMAKE_TOOLCHAIN_FILE=lib/libDaisy/cmake/toolchains/stm32h750xx.cmake ..
