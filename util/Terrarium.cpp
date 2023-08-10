@@ -101,13 +101,13 @@ void Terrarium::InitStomps()
 //=============================================================================
 void Terrarium::InitLeds()
 {
-    constexpr std::array<daisy::Pin, led_count> led_pins{
-        daisy::seed::D22,
-        daisy::seed::D23,
+    constexpr std::array<daisy::DacHandle::Channel, led_count> led_dacs{
+        daisy::DacHandle::Channel::TWO,
+        daisy::DacHandle::Channel::ONE,
     };
 
     for (int i = 0; i < led_count; ++i)
     {
-        leds[i].Init(led_pins[i], daisy::GPIO::Mode::OUTPUT);
+        leds[i].Init(led_dacs[i]);
     }
 }

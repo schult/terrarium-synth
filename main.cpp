@@ -22,5 +22,7 @@ int main()
     terrarium.Init();
     terrarium.seed.StartAudio(processAudioBlock);
     terrarium.Loop(30, [&](){
+        terrarium.leds[0].Set(terrarium.knobs[3].Process());
+        terrarium.leds[1].Set(terrarium.knobs[5].Process());
     });
 }

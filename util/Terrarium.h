@@ -3,6 +3,8 @@
 
 #include <daisy_seed.h>
 
+#include <util/Led.h>
+
 class Terrarium
 {
 public:
@@ -25,7 +27,7 @@ public:
     std::array<daisy::AnalogControl, knob_count> knobs;
     std::array<daisy::Switch, toggle_count> toggles;
     std::array<daisy::Switch, stomp_count> stomps;
-    std::array<daisy::GPIO, led_count> leds;
+    std::array<Led, led_count> leds;
 
 private:
     void InitKnobs();

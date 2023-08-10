@@ -4,6 +4,8 @@ project(SynthPedal VERSION 1.0.0)
 set(FIRMWARE_NAME SynthPedal)
 set(FIRMWARE_SOURCES
     main.cpp
+    util/Led.h
+    util/Led.cpp
     util/Terrarium.h
     util/Terrarium.cpp
 )
