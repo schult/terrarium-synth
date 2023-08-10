@@ -1,5 +1,7 @@
 #include <daisy_seed.h>
 
+#include <util/Terrarium.h>
+
 //=============================================================================
 void processAudioBlock(
     daisy::AudioHandle::InputBuffer in,
@@ -16,8 +18,9 @@ void processAudioBlock(
 //=============================================================================
 int main()
 {
-    daisy::DaisySeed hardware;
-    hardware.Init();
-    hardware.StartAudio(processAudioBlock);
-    while(true) {}
+    Terrarium terrarium;
+    terrarium.Init();
+    terrarium.seed.StartAudio(processAudioBlock);
+    terrarium.Loop(30, [&](){
+    });
 }
