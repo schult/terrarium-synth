@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
-project(SynthPedal VERSION 1.0.0)
+project(TerrariumSynth VERSION 1.0.0)
 
-set(FIRMWARE_NAME SynthPedal)
+set(FIRMWARE_NAME TerrariumSynth)
 set(FIRMWARE_SOURCES
     main.cpp
     syscalls.c
