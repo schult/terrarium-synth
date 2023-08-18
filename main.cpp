@@ -12,6 +12,7 @@ using namespace q::literals;
 struct EffectState
 {
     float blend = 0.0f;
+    float duty_cycle = 0.5f;
 };
 
 Terrarium terrarium;
@@ -37,8 +38,9 @@ void processAudioBlock(
 
     const auto wet_blend = interface_state.blend;
     const auto dry_blend = 1 - wet_blend;
+    const auto duty_cycle = interface_state.duty_cycle;
 
-    pulse_synth.width(0.5);
+    pulse_synth.width(duty_cycle);
 
     for (size_t i = 0; i < size; ++i)
     {
@@ -63,9 +65,11 @@ int main()
     terrarium.Init();
 
     daisy::Parameter param_blend;
+    daisy::Parameter param_duty_cycle;
 
     auto& knobs = terrarium.knobs;
     param_blend.Init(knobs[1], 0.0, 1.0, daisy::Parameter::LINEAR);
+    param_duty_cycle.Init(knobs[2], 0.5, 1.0, daisy::Parameter::LINEAR);
 
     auto& stomp_bypass = terrarium.stomps[0];
 
@@ -75,6 +79,7 @@ int main()
 
     terrarium.Loop(100, [&](){
         interface_state.blend = param_blend.Process();
+        interface_state.duty_cycle = param_duty_cycle.Process();
 
         if (stomp_bypass.RisingEdge())
         {
