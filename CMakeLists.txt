@@ -26,3 +26,7 @@ set_target_properties(${FIRMWARE_NAME} PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED YES
 )
+
+target_link_options(${FIRMWARE_NAME} PRIVATE
+    -flto=auto
+)
