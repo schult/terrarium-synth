@@ -35,11 +35,11 @@ void processAudioBlock(
         const auto dry = in[0][i];
 
         const auto envelope = envelope_follower(std::abs(dry));
-        const auto frequency =
-            pd(dry) ? pd.get_frequency() : pd.predict_frequency();
-        phase.set(frequency, sample_rate);
-        const auto wet =
-            (frequency > 0) ? (pulse_synth(phase++) * envelope) : 0;
+        if (pd(dry))
+        {
+            phase.set(pd.get_frequency(), sample_rate);
+        }
+        const auto wet = pulse_synth(phase++) * envelope;
 
         out[0][i] = wet;
         out[1][i] = 0;
