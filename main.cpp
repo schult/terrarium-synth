@@ -10,6 +10,7 @@ namespace q = cycfi::q;
 using namespace q::literals;
 
 Terrarium terrarium;
+bool enable_effect = false;
 
 //=============================================================================
 void processAudioBlock(
@@ -41,7 +42,7 @@ void processAudioBlock(
         }
         const auto wet = pulse_synth(phase++) * envelope;
 
-        out[0][i] = wet;
+        out[0][i] = enable_effect ? wet : dry;
         out[1][i] = 0;
     }
 }
@@ -50,7 +51,18 @@ void processAudioBlock(
 int main()
 {
     terrarium.Init();
+
+    auto& stomp_bypass = terrarium.stomps[0];
+
+    auto& led_enable = terrarium.leds[0];
+
     terrarium.seed.StartAudio(processAudioBlock);
-    terrarium.Loop(30, [&](){
+
+    terrarium.Loop(100, [&](){
+        if (stomp_bypass.RisingEdge())
+        {
+            enable_effect = !enable_effect;
+        }
+        led_enable.Set(enable_effect ? 1 : 0);
     });
 }
