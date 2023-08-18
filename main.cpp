@@ -1,4 +1,5 @@
 #include <daisy_seed.h>
+#include <q/fx/envelope.hpp>
 #include <q/pitch/pitch_detector.hpp>
 #include <q/support/pitch_names.hpp>
 #include <q/synth/pulse_osc.hpp>
@@ -22,6 +23,7 @@ void processAudioBlock(
 
     static const auto sample_rate = terrarium.seed.AudioSampleRate();
 
+    static q::peak_envelope_follower envelope_follower(30_ms, sample_rate);
     static q::pitch_detector pd(min_freq, max_freq, sample_rate, hysteresis);
     static q::phase_iterator phase;
     static q::basic_pulse_osc pulse_synth;
@@ -32,10 +34,12 @@ void processAudioBlock(
     {
         const auto dry = in[0][i];
 
+        const auto envelope = envelope_follower(std::abs(dry));
         const auto frequency =
             pd(dry) ? pd.get_frequency() : pd.predict_frequency();
         phase.set(frequency, sample_rate);
-        const auto wet = (frequency > 0) ? pulse_synth(phase++) : 0;
+        const auto wet =
+            (frequency > 0) ? (pulse_synth(phase++) * envelope) : 0;
 
         out[0][i] = wet;
         out[1][i] = 0;
