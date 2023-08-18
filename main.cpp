@@ -9,7 +9,13 @@
 namespace q = cycfi::q;
 using namespace q::literals;
 
+struct EffectState
+{
+    float blend = 0.0f;
+};
+
 Terrarium terrarium;
+EffectState interface_state;
 bool enable_effect = false;
 
 //=============================================================================
@@ -29,6 +35,9 @@ void processAudioBlock(
     static q::phase_iterator phase;
     static q::basic_pulse_osc pulse_synth;
 
+    const auto wet_blend = interface_state.blend;
+    const auto dry_blend = 1 - wet_blend;
+
     pulse_synth.width(0.5);
 
     for (size_t i = 0; i < size; ++i)
@@ -42,7 +51,8 @@ void processAudioBlock(
         }
         const auto wet = pulse_synth(phase++) * envelope;
 
-        out[0][i] = enable_effect ? wet : dry;
+        const auto mix = (dry * dry_blend) + (wet * wet_blend);
+        out[0][i] = enable_effect ? mix : dry;
         out[1][i] = 0;
     }
 }
@@ -52,6 +62,11 @@ int main()
 {
     terrarium.Init();
 
+    daisy::Parameter param_blend;
+
+    auto& knobs = terrarium.knobs;
+    param_blend.Init(knobs[1], 0.0, 1.0, daisy::Parameter::LINEAR);
+
     auto& stomp_bypass = terrarium.stomps[0];
 
     auto& led_enable = terrarium.leds[0];
@@ -59,6 +74,8 @@ int main()
     terrarium.seed.StartAudio(processAudioBlock);
 
     terrarium.Loop(100, [&](){
+        interface_state.blend = param_blend.Process();
+
         if (stomp_bypass.RisingEdge())
         {
             enable_effect = !enable_effect;
