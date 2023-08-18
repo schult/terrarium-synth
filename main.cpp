@@ -7,6 +7,7 @@
 #include <q/support/pitch_names.hpp>
 #include <q/synth/pulse_osc.hpp>
 
+#include <util/Blink.h>
 #include <util/Terrarium.h>
 #include <util/TriangleSynth.h>
 
@@ -23,7 +24,10 @@ struct EffectState
 
 Terrarium terrarium;
 EffectState interface_state;
+EffectState preset_state;
+EffectState DSY_QSPI_BSS saved_preset;
 bool enable_effect = false;
+bool use_preset = false;
 
 //=============================================================================
 void processAudioBlock(
@@ -43,11 +47,12 @@ void processAudioBlock(
     static q::basic_pulse_osc pulse_synth;
     static TriangleSynth triangle_synth;
 
-    const auto level = interface_state.level;
-    const auto wet_blend = interface_state.blend;
+    const auto& active_state = use_preset ? preset_state : interface_state;
+    const auto level = active_state.level;
+    const auto wet_blend = active_state.blend;
     const auto dry_blend = 1 - wet_blend;
-    const auto duty_cycle = interface_state.duty_cycle;
-    const auto wave_shape = interface_state.wave_shape;
+    const auto duty_cycle = active_state.duty_cycle;
+    const auto wave_shape = active_state.wave_shape;
 
     using osc = std::function<float(q::phase_iterator)>;
     const auto synth = wave_shape ? osc(pulse_synth) : osc(triangle_synth);
@@ -89,8 +94,16 @@ int main()
     auto& toggle_wave_shape = terrarium.toggles[0];
 
     auto& stomp_bypass = terrarium.stomps[0];
+    auto& stomp_preset = terrarium.stomps[1];
 
     auto& led_enable = terrarium.leds[0];
+    auto& preset_led = terrarium.leds[1];
+
+    preset_state = saved_preset;
+    preset_state.duty_cycle = std::max(0.5f, preset_state.duty_cycle);
+    bool preset_written = false;
+    Blink blink;
+
 
     terrarium.seed.StartAudio(processAudioBlock);
 
@@ -104,6 +117,29 @@ int main()
         {
             enable_effect = !enable_effect;
         }
+
+        if (stomp_preset.RisingEdge())
+        {
+            use_preset = !use_preset;
+            preset_written = false;
+        }
+
+        if ((stomp_preset.TimeHeldMs() > 5000) && !preset_written)
+        {
+            preset_state = interface_state;
+
+            const auto data = reinterpret_cast<uint8_t*>(&preset_state);
+            const auto size = static_cast<uint32_t>(sizeof(preset_state));
+            const auto start_addr = reinterpret_cast<uint32_t>(&saved_preset);
+            terrarium.seed.qspi.Erase(start_addr, start_addr+size);
+            terrarium.seed.qspi.Write(start_addr, size, data);
+
+            preset_written = true;
+            blink.reset();
+        }
+
         led_enable.Set(enable_effect ? 1 : 0);
+        auto preset_led_on = blink.enabled() ? blink.process() : use_preset;
+        preset_led.Set(preset_led_on ? 1 : 0);
     });
 }

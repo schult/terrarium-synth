@@ -5,6 +5,7 @@ set(FIRMWARE_NAME TerrariumSynth)
 set(FIRMWARE_SOURCES
     main.cpp
     syscalls.c
+    util/Blink.h
     util/Led.h
     util/Led.cpp
     util/Terrarium.h
