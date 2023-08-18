@@ -8,7 +8,7 @@ in a [PedalPCB Terrarium](https://www.pedalpcb.com/product/pcb351/).
 
     cmake \
         -GNinja \
-        -DTOOLCHAIN_PREFIX=/opt/homebrew \
+        -DTOOLCHAIN_PREFIX=/path/to/toolchain \
         -DCMAKE_TOOLCHAIN_FILE=lib/libDaisy/cmake/toolchains/stm32h750xx.cmake \
         -DCMAKE_BUILD_TYPE=Release \
         -B build .
