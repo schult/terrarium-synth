@@ -9,6 +9,7 @@ set(FIRMWARE_SOURCES
     util/Led.cpp
     util/Terrarium.h
     util/Terrarium.cpp
+    util/TriangleSynth.h
 )
 set(LIBDAISY_DIR ${CMAKE_SOURCE_DIR}/lib/libDaisy)
 include(${LIBDAISY_DIR}/cmake/default_build.cmake)
