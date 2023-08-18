@@ -15,6 +15,7 @@ using namespace q::literals;
 
 struct EffectState
 {
+    float level = 0.0f;
     float blend = 0.0f;
     float duty_cycle = 0.5f;
     bool wave_shape = true;
@@ -42,6 +43,7 @@ void processAudioBlock(
     static q::basic_pulse_osc pulse_synth;
     static TriangleSynth triangle_synth;
 
+    const auto level = interface_state.level;
     const auto wet_blend = interface_state.blend;
     const auto dry_blend = 1 - wet_blend;
     const auto duty_cycle = interface_state.duty_cycle;
@@ -64,7 +66,7 @@ void processAudioBlock(
         }
         const auto wet = synth(phase++) * envelope;
 
-        const auto mix = (dry * dry_blend) + (wet * wet_blend);
+        const auto mix = level * ((dry * dry_blend) + (wet * wet_blend));
         out[0][i] = enable_effect ? mix : dry;
         out[1][i] = 0;
     }
@@ -75,10 +77,12 @@ int main()
 {
     terrarium.Init();
 
+    daisy::Parameter param_level;
     daisy::Parameter param_blend;
     daisy::Parameter param_duty_cycle;
 
     auto& knobs = terrarium.knobs;
+    param_level.Init(knobs[0], 0.05, 20.0, daisy::Parameter::LOGARITHMIC);
     param_blend.Init(knobs[1], 0.0, 1.0, daisy::Parameter::LINEAR);
     param_duty_cycle.Init(knobs[2], 0.5, 1.0, daisy::Parameter::LINEAR);
 
@@ -91,6 +95,7 @@ int main()
     terrarium.seed.StartAudio(processAudioBlock);
 
     terrarium.Loop(100, [&](){
+        interface_state.level = param_level.Process();
         interface_state.blend = param_blend.Process();
         interface_state.duty_cycle = param_duty_cycle.Process();
         interface_state.wave_shape = toggle_wave_shape.Pressed();
