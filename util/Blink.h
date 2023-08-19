@@ -26,6 +26,6 @@ public:
 private:
     static constexpr int max_count = 6;
     static constexpr uint32_t interval_ms = 125;
-    bool _expired = false;
+    bool _expired = true;
     uint32_t _start_ms = 0;
 };
