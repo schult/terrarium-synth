@@ -43,7 +43,6 @@ void processAudioBlock(
     const auto& active_state = use_preset ? preset_state : interface_state;
     const auto level = active_state.level;
     const auto wet_blend = active_state.blend;
-    const auto dry_blend = 1 - wet_blend;
     const auto duty_cycle = active_state.duty_cycle;
     const auto wave_shape = active_state.wave_shape;
 
@@ -64,7 +63,7 @@ void processAudioBlock(
         }
         const auto wet = synth(phase++) * envelope;
 
-        const auto mix = level * ((dry * dry_blend) + (wet * wet_blend));
+        const auto mix = level * std::lerp(dry, wet, wet_blend);
         out[0][i] = enable_effect ? mix : dry;
         out[1][i] = 0;
     }
