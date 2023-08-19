@@ -41,7 +41,7 @@ void processAudioBlock(
 
     const auto& active_state = use_preset ? preset_state : interface_state;
     const auto level = active_state.level;
-    const auto wet_blend = active_state.blend;
+    const auto wet_blend = active_state.wet_blend;
     const auto duty_cycle = active_state.duty_cycle;
     const auto wave_blend = active_state.wave_blend;
 
@@ -73,7 +73,7 @@ int main()
     terrarium.Init();
 
     daisy::Parameter param_level;
-    daisy::Parameter param_blend;
+    daisy::Parameter param_wet_blend;
     daisy::Parameter param_duty_cycle;
 
     auto& knobs = terrarium.knobs;
@@ -82,10 +82,10 @@ int main()
         EffectState::min_level,
         EffectState::max_level,
         daisy::Parameter::LOGARITHMIC);
-    param_blend.Init(
+    param_wet_blend.Init(
         knobs[1],
-        EffectState::min_blend,
-        EffectState::max_blend,
+        EffectState::min_wet_blend,
+        EffectState::max_wet_blend,
         daisy::Parameter::LINEAR);
     param_duty_cycle.Init(
         knobs[2],
@@ -110,7 +110,7 @@ int main()
 
     terrarium.Loop(100, [&](){
         interface_state.level = param_level.Process();
-        interface_state.blend = param_blend.Process();
+        interface_state.wet_blend = param_wet_blend.Process();
         interface_state.duty_cycle = param_duty_cycle.Process();
         interface_state.wave_blend = toggle_wave_shape.Pressed() ?
             EffectState::max_wave_blend : EffectState::min_wave_blend;
