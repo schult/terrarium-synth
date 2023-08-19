@@ -39,14 +39,10 @@ void processAudioBlock(
     static q::basic_pulse_osc pulse_synth;
     static TriangleSynth triangle_synth;
 
-    const auto& active_state = use_preset ? preset_state : interface_state;
-    const auto level = active_state.level;
-    const auto wet_blend = active_state.wet_blend;
-    const auto duty_cycle = active_state.duty_cycle;
-    const auto wave_blend = active_state.wave_blend;
+    const auto s = use_preset ? preset_state : interface_state;
 
-    pulse_synth.width(duty_cycle);
-    triangle_synth.setSkew(duty_cycle);
+    pulse_synth.width(s.duty_cycle);
+    triangle_synth.setSkew(s.duty_cycle);
 
     for (size_t i = 0; i < size; ++i)
     {
@@ -58,10 +54,10 @@ void processAudioBlock(
             phase.set(pd.get_frequency(), sample_rate);
         }
         const auto wet = envelope *
-            std::lerp(triangle_synth(phase), pulse_synth(phase), wave_blend);
+            std::lerp(triangle_synth(phase), pulse_synth(phase), s.wave_blend);
         phase++;
 
-        const auto mix = level * std::lerp(dry, wet, wet_blend);
+        const auto mix = s.level * std::lerp(dry, wet, s.wet_blend);
         out[0][i] = enable_effect ? mix : dry;
         out[1][i] = 0;
     }
