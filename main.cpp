@@ -71,6 +71,7 @@ int main()
     daisy::Parameter param_level;
     daisy::Parameter param_wet_blend;
     daisy::Parameter param_duty_cycle;
+    daisy::Parameter param_preset_blend;
 
     auto& knobs = terrarium.knobs;
     param_level.Init(
@@ -88,6 +89,7 @@ int main()
         EffectState::min_duty_cycle,
         EffectState::max_duty_cycle,
         daisy::Parameter::LINEAR);
+    param_preset_blend.Init(knobs[5], 0, 1, daisy::Parameter::LINEAR);
 
     auto& toggle_wave_shape = terrarium.toggles[0];
 
@@ -140,6 +142,9 @@ int main()
         interface_state.duty_cycle = param_duty_cycle.Process();
         interface_state.wave_blend = toggle_wave_shape.Pressed() ?
             EffectState::max_wave_blend : EffectState::min_wave_blend;
-        preset_blend = use_preset ? 1 : 0;
+
+        (void)param_preset_blend.Process();
+        preset_blend = use_preset ? (1 - param_preset_blend.Value()) :
+            param_preset_blend.Value();
     });
 }
