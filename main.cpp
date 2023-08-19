@@ -19,7 +19,7 @@ EffectState interface_state;
 EffectState preset_state;
 EffectState DSY_QSPI_BSS saved_preset;
 bool enable_effect = false;
-float preset_blend = 0.0;
+bool use_preset = false;
 
 //=============================================================================
 void processAudioBlock(
@@ -39,7 +39,7 @@ void processAudioBlock(
     static q::basic_pulse_osc pulse_synth;
     static TriangleSynth triangle_synth;
 
-    const auto s = lerp(interface_state, preset_state, preset_blend);
+    const auto& s = use_preset ? preset_state : interface_state;
 
     pulse_synth.width(s.duty_cycle);
     triangle_synth.setSkew(s.duty_cycle);
@@ -71,7 +71,6 @@ int main()
     daisy::Parameter param_level;
     daisy::Parameter param_wet_blend;
     daisy::Parameter param_duty_cycle;
-    daisy::Parameter param_preset_blend;
 
     auto& knobs = terrarium.knobs;
     param_level.Init(
@@ -89,7 +88,6 @@ int main()
         EffectState::min_duty_cycle,
         EffectState::max_duty_cycle,
         daisy::Parameter::LINEAR);
-    param_preset_blend.Init(knobs[5], 0, 1, daisy::Parameter::LINEAR);
 
     auto& toggle_wave_shape = terrarium.toggles[0];
 
@@ -100,7 +98,6 @@ int main()
     auto& preset_led = terrarium.leds[1];
 
     preset_state = saved_preset.clamped();
-    bool use_preset = false;
     bool preset_written = false;
     Blink blink;
 
@@ -142,9 +139,5 @@ int main()
         interface_state.duty_cycle = param_duty_cycle.Process();
         interface_state.wave_blend = toggle_wave_shape.Pressed() ?
             EffectState::max_wave_blend : EffectState::min_wave_blend;
-
-        (void)param_preset_blend.Process();
-        preset_blend = use_preset ? (1 - param_preset_blend.Value()) :
-            param_preset_blend.Value();
     });
 }

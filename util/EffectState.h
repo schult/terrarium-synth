@@ -26,14 +26,4 @@ struct EffectState
             .wave_blend = std::clamp(wave_blend, min_wave_blend, max_wave_blend),
         };
     }
-
-    friend EffectState lerp(EffectState& a, EffectState& b, float t)
-    {
-        return EffectState{
-            .level = std::lerp(a.level, b.level, t),
-            .wet_blend = std::lerp(a.wet_blend, b.wet_blend, t),
-            .duty_cycle = std::lerp(a.duty_cycle, b.duty_cycle, t),
-            .wave_blend = std::lerp(a.wave_blend, b.wave_blend, t),
-        };
-    }
 };
