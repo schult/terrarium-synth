@@ -1,5 +1,4 @@
 #include <cmath>
-#include <functional>
 
 #include <daisy_seed.h>
 #include <q/fx/envelope.hpp>
@@ -44,10 +43,7 @@ void processAudioBlock(
     const auto level = active_state.level;
     const auto wet_blend = active_state.blend;
     const auto duty_cycle = active_state.duty_cycle;
-    const auto wave_shape = active_state.wave_shape;
-
-    using osc = std::function<float(q::phase_iterator)>;
-    const auto synth = wave_shape ? osc(pulse_synth) : osc(triangle_synth);
+    const auto wave_blend = active_state.wave_blend;
 
     pulse_synth.width(duty_cycle);
     triangle_synth.setSkew(duty_cycle);
@@ -61,7 +57,9 @@ void processAudioBlock(
         {
             phase.set(pd.get_frequency(), sample_rate);
         }
-        const auto wet = synth(phase++) * envelope;
+        const auto wet = envelope *
+            std::lerp(triangle_synth(phase), pulse_synth(phase), wave_blend);
+        phase++;
 
         const auto mix = level * std::lerp(dry, wet, wet_blend);
         out[0][i] = enable_effect ? mix : dry;
@@ -114,7 +112,8 @@ int main()
         interface_state.level = param_level.Process();
         interface_state.blend = param_blend.Process();
         interface_state.duty_cycle = param_duty_cycle.Process();
-        interface_state.wave_shape = toggle_wave_shape.Pressed();
+        interface_state.wave_blend = toggle_wave_shape.Pressed() ?
+            EffectState::max_wave_blend : EffectState::min_wave_blend;
 
         if (stomp_bypass.RisingEdge())
         {
