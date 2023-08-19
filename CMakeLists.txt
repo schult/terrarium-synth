@@ -6,6 +6,7 @@ set(FIRMWARE_SOURCES
     main.cpp
     syscalls.c
     util/Blink.h
+    util/EffectState.h
     util/Led.h
     util/Led.cpp
     util/Terrarium.h

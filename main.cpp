@@ -8,19 +8,12 @@
 #include <q/synth/pulse_osc.hpp>
 
 #include <util/Blink.h>
+#include <util/EffectState.h>
 #include <util/Terrarium.h>
 #include <util/TriangleSynth.h>
 
 namespace q = cycfi::q;
 using namespace q::literals;
-
-struct EffectState
-{
-    float level = 0.0f;
-    float blend = 0.0f;
-    float duty_cycle = 0.5f;
-    bool wave_shape = true;
-};
 
 Terrarium terrarium;
 EffectState interface_state;
@@ -87,9 +80,21 @@ int main()
     daisy::Parameter param_duty_cycle;
 
     auto& knobs = terrarium.knobs;
-    param_level.Init(knobs[0], 0.05, 20.0, daisy::Parameter::LOGARITHMIC);
-    param_blend.Init(knobs[1], 0.0, 1.0, daisy::Parameter::LINEAR);
-    param_duty_cycle.Init(knobs[2], 0.5, 1.0, daisy::Parameter::LINEAR);
+    param_level.Init(
+        knobs[0],
+        EffectState::min_level,
+        EffectState::max_level,
+        daisy::Parameter::LOGARITHMIC);
+    param_blend.Init(
+        knobs[1],
+        EffectState::min_blend,
+        EffectState::max_blend,
+        daisy::Parameter::LINEAR);
+    param_duty_cycle.Init(
+        knobs[2],
+        EffectState::min_duty_cycle,
+        EffectState::max_duty_cycle,
+        daisy::Parameter::LINEAR);
 
     auto& toggle_wave_shape = terrarium.toggles[0];
 
@@ -99,8 +104,7 @@ int main()
     auto& led_enable = terrarium.leds[0];
     auto& preset_led = terrarium.leds[1];
 
-    preset_state = saved_preset;
-    preset_state.duty_cycle = std::max(0.5f, preset_state.duty_cycle);
+    preset_state = saved_preset.clamped();
     bool preset_written = false;
     Blink blink;
 
