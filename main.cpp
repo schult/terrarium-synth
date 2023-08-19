@@ -19,7 +19,7 @@ EffectState interface_state;
 EffectState preset_state;
 EffectState DSY_QSPI_BSS saved_preset;
 bool enable_effect = false;
-bool use_preset = false;
+float preset_blend = 0.0;
 
 //=============================================================================
 void processAudioBlock(
@@ -39,7 +39,7 @@ void processAudioBlock(
     static q::basic_pulse_osc pulse_synth;
     static TriangleSynth triangle_synth;
 
-    const auto s = use_preset ? preset_state : interface_state;
+    const auto s = lerp(interface_state, preset_state, preset_blend);
 
     pulse_synth.width(s.duty_cycle);
     triangle_synth.setSkew(s.duty_cycle);
@@ -98,6 +98,7 @@ int main()
     auto& preset_led = terrarium.leds[1];
 
     preset_state = saved_preset.clamped();
+    bool use_preset = false;
     bool preset_written = false;
     Blink blink;
 
@@ -105,12 +106,6 @@ int main()
     terrarium.seed.StartAudio(processAudioBlock);
 
     terrarium.Loop(100, [&](){
-        interface_state.level = param_level.Process();
-        interface_state.wet_blend = param_wet_blend.Process();
-        interface_state.duty_cycle = param_duty_cycle.Process();
-        interface_state.wave_blend = toggle_wave_shape.Pressed() ?
-            EffectState::max_wave_blend : EffectState::min_wave_blend;
-
         if (stomp_bypass.RisingEdge())
         {
             enable_effect = !enable_effect;
@@ -139,5 +134,12 @@ int main()
         led_enable.Set(enable_effect ? 1 : 0);
         auto preset_led_on = blink.enabled() ? blink.process() : use_preset;
         preset_led.Set(preset_led_on ? 1 : 0);
+
+        interface_state.level = param_level.Process();
+        interface_state.wet_blend = param_wet_blend.Process();
+        interface_state.duty_cycle = param_duty_cycle.Process();
+        interface_state.wave_blend = toggle_wave_shape.Pressed() ?
+            EffectState::max_wave_blend : EffectState::min_wave_blend;
+        preset_blend = use_preset ? 1 : 0;
     });
 }
