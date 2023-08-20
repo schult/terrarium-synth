@@ -57,7 +57,7 @@ void processAudioBlock(
             std::lerp(triangle_synth(phase), pulse_synth(phase), s.wave_blend);
         phase++;
 
-        const auto mix = s.level * std::lerp(dry, wet, s.wet_blend);
+        const auto mix = (dry * s.dry_level) + (wet * s.wet_level);
         out[0][i] = enable_effect ? mix : dry;
         out[1][i] = 0;
     }
@@ -68,20 +68,23 @@ int main()
 {
     terrarium.Init();
 
-    daisy::Parameter param_level;
-    daisy::Parameter param_wet_blend;
+    // This offset keeps unity gain at noon. Assumes min == 0.
+    constexpr auto dry_level_offset = 1 / (EffectState::max_dry_level - 2);
+
+    daisy::Parameter param_dry_level;
+    daisy::Parameter param_wet_level;
     daisy::Parameter param_duty_cycle;
 
     auto& knobs = terrarium.knobs;
-    param_level.Init(
+    param_dry_level.Init(
         knobs[0],
-        EffectState::min_level,
-        EffectState::max_level,
+        EffectState::min_dry_level + dry_level_offset,
+        EffectState::max_dry_level + dry_level_offset,
         daisy::Parameter::LOGARITHMIC);
-    param_wet_blend.Init(
+    param_wet_level.Init(
         knobs[1],
-        EffectState::min_wet_blend,
-        EffectState::max_wet_blend,
+        EffectState::min_wet_level,
+        EffectState::max_wet_level,
         daisy::Parameter::LINEAR);
     param_duty_cycle.Init(
         knobs[2],
@@ -134,8 +137,9 @@ int main()
         auto preset_led_on = blink.enabled() ? blink.process() : use_preset;
         preset_led.Set(preset_led_on ? 1 : 0);
 
-        interface_state.level = param_level.Process();
-        interface_state.wet_blend = param_wet_blend.Process();
+        interface_state.dry_level =
+            param_dry_level.Process() - dry_level_offset;
+        interface_state.wet_level = param_wet_level.Process();
         interface_state.duty_cycle = param_duty_cycle.Process();
         interface_state.wave_blend = toggle_wave_shape.Pressed() ?
             EffectState::max_wave_blend : EffectState::min_wave_blend;
