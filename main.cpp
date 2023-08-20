@@ -46,19 +46,20 @@ void processAudioBlock(
 
     for (size_t i = 0; i < size; ++i)
     {
-        const auto dry = in[0][i];
+        const auto dry_signal = in[0][i];
 
-        const auto envelope = envelope_follower(std::abs(dry));
-        if (pd(dry))
+        const auto envelope = envelope_follower(std::abs(dry_signal));
+        if (pd(dry_signal))
         {
             phase.set(pd.get_frequency(), sample_rate);
         }
-        const auto wet = envelope *
+        const auto synth_signal = envelope *
             std::lerp(triangle_synth(phase), pulse_synth(phase), s.wave_blend);
         phase++;
 
-        const auto mix = (dry * s.dry_level) + (wet * s.wet_level);
-        out[0][i] = enable_effect ? mix : dry;
+        const auto mix =
+            (dry_signal * s.dry_level) + (synth_signal * s.synth_level);
+        out[0][i] = enable_effect ? mix : dry_signal;
         out[1][i] = 0;
     }
 }
@@ -69,27 +70,27 @@ int main()
     terrarium.Init();
 
     // This offset keeps unity gain at noon. Assumes min == 0.
-    constexpr auto dry_level_offset = 1 / (EffectState::max_dry_level - 2);
+    constexpr auto dry_level_offset = 1 / (EffectState::dry_level_max - 2);
 
     daisy::Parameter param_dry_level;
-    daisy::Parameter param_wet_level;
+    daisy::Parameter param_synth_level;
     daisy::Parameter param_duty_cycle;
 
     auto& knobs = terrarium.knobs;
     param_dry_level.Init(
         knobs[0],
-        EffectState::min_dry_level + dry_level_offset,
-        EffectState::max_dry_level + dry_level_offset,
+        EffectState::dry_level_min + dry_level_offset,
+        EffectState::dry_level_max + dry_level_offset,
         daisy::Parameter::LOGARITHMIC);
-    param_wet_level.Init(
+    param_synth_level.Init(
         knobs[1],
-        EffectState::min_wet_level,
-        EffectState::max_wet_level,
+        EffectState::synth_level_min,
+        EffectState::synth_level_max,
         daisy::Parameter::LINEAR);
     param_duty_cycle.Init(
         knobs[2],
-        EffectState::min_duty_cycle,
-        EffectState::max_duty_cycle,
+        EffectState::duty_cycle_min,
+        EffectState::duty_cycle_max,
         daisy::Parameter::LINEAR);
 
     auto& toggle_wave_shape = terrarium.toggles[0];
@@ -139,9 +140,9 @@ int main()
 
         interface_state.dry_level =
             param_dry_level.Process() - dry_level_offset;
-        interface_state.wet_level = param_wet_level.Process();
+        interface_state.synth_level = param_synth_level.Process();
         interface_state.duty_cycle = param_duty_cycle.Process();
         interface_state.wave_blend = toggle_wave_shape.Pressed() ?
-            EffectState::max_wave_blend : EffectState::min_wave_blend;
+            EffectState::wave_blend_max : EffectState::wave_blend_min;
     });
 }
