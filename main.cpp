@@ -33,7 +33,7 @@ void processAudioBlock(
 
     static const auto sample_rate = terrarium.seed.AudioSampleRate();
 
-    static q::peak_envelope_follower envelope_follower(30_ms, sample_rate);
+    static q::peak_envelope_follower envelope_follower(10_ms, sample_rate);
     static q::pitch_detector pd(min_freq, max_freq, sample_rate, hysteresis);
     static q::phase_iterator phase;
     static q::basic_pulse_osc pulse_synth;
@@ -48,12 +48,15 @@ void processAudioBlock(
     {
         const auto dry_signal = in[0][i];
 
+        constexpr auto threshold = 0.07f;
         const auto envelope = envelope_follower(std::abs(dry_signal));
+        const auto gate = s.follow_envelope ? envelope :
+            ((envelope < threshold) ? 0.0f : 1.0f);
         if (pd(dry_signal))
         {
             phase.set(pd.get_frequency(), sample_rate);
         }
-        const auto synth_signal = envelope *
+        const auto synth_signal = gate *
             std::lerp(triangle_synth(phase), pulse_synth(phase), s.wave_blend);
         phase++;
 
@@ -94,6 +97,7 @@ int main()
         daisy::Parameter::LINEAR);
 
     auto& toggle_wave_shape = terrarium.toggles[0];
+    auto& toggle_envelope = terrarium.toggles[1];
 
     auto& stomp_bypass = terrarium.stomps[0];
     auto& stomp_preset = terrarium.stomps[1];
@@ -144,5 +148,6 @@ int main()
         interface_state.duty_cycle = param_duty_cycle.Process();
         interface_state.wave_blend = toggle_wave_shape.Pressed() ?
             EffectState::wave_blend_max : EffectState::wave_blend_min;
+        interface_state.follow_envelope = toggle_envelope.Pressed();
     });
 }

@@ -18,6 +18,7 @@ struct EffectState
     float synth_level = synth_level_min;
     float duty_cycle = duty_cycle_min;
     float wave_blend = wave_blend_min;
+    bool follow_envelope = false;
 
     EffectState clamped() const
     {
@@ -27,6 +28,7 @@ struct EffectState
             .synth_level = clamp(synth_level, synth_level_min, synth_level_max),
             .duty_cycle = clamp(duty_cycle, duty_cycle_min, duty_cycle_max),
             .wave_blend = clamp(wave_blend, wave_blend_min, wave_blend_max),
+            .follow_envelope = follow_envelope,
         };
     }
 };
