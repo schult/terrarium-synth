@@ -2,7 +2,9 @@
 
 #include <daisy_seed.h>
 #include <q/fx/envelope.hpp>
+#include <q/fx/noise_gate.hpp>
 #include <q/pitch/pitch_detector.hpp>
+#include <q/support/literals.hpp>
 #include <q/support/pitch_names.hpp>
 #include <q/synth/pulse_osc.hpp>
 
@@ -33,6 +35,7 @@ void processAudioBlock(
 
     static const auto sample_rate = terrarium.seed.AudioSampleRate();
 
+    static q::noise_gate gate(-120_dB);
     static q::peak_envelope_follower envelope_follower(10_ms, sample_rate);
     static q::pitch_detector pd(min_freq, max_freq, sample_rate, hysteresis);
     static q::phase_iterator phase;
@@ -41,22 +44,25 @@ void processAudioBlock(
 
     const auto& s = use_preset ? preset_state : interface_state;
 
+    gate.onset_threshold(s.gate_onset);
+    gate.release_threshold(q::lin_to_db(s.gate_onset) - 12_dB);
+
     pulse_synth.width(s.duty_cycle);
     triangle_synth.setSkew(s.duty_cycle);
 
     for (size_t i = 0; i < size; ++i)
     {
         const auto dry_signal = in[0][i];
-
-        constexpr auto threshold = 0.07f;
-        const auto envelope = envelope_follower(std::abs(dry_signal));
-        const auto gate = s.follow_envelope ? envelope :
-            ((envelope < threshold) ? 0.0f : 1.0f);
         if (pd(dry_signal))
         {
             phase.set(pd.get_frequency(), sample_rate);
         }
-        const auto synth_signal = gate *
+
+        const auto dry_envelope = envelope_follower(std::abs(dry_signal));
+        const auto synth_envelope = (gate(dry_envelope) ? 1 : 0) *
+            (s.follow_envelope ? dry_envelope : 0.25f);
+
+        const auto synth_signal = synth_envelope *
             std::lerp(triangle_synth(phase), pulse_synth(phase), s.wave_blend);
         phase++;
 
@@ -78,6 +84,7 @@ int main()
     daisy::Parameter param_dry_level;
     daisy::Parameter param_synth_level;
     daisy::Parameter param_duty_cycle;
+    daisy::Parameter param_gate_onset;
 
     auto& knobs = terrarium.knobs;
     param_dry_level.Init(
@@ -95,6 +102,11 @@ int main()
         EffectState::duty_cycle_min,
         EffectState::duty_cycle_max,
         daisy::Parameter::LINEAR);
+    param_gate_onset.Init(
+        knobs[3],
+        EffectState::gate_onset_min,
+        EffectState::gate_onset_max,
+        daisy::Parameter::LOGARITHMIC);
 
     auto& toggle_wave_shape = terrarium.toggles[0];
     auto& toggle_envelope = terrarium.toggles[1];
@@ -146,6 +158,7 @@ int main()
             param_dry_level.Process() - dry_level_offset;
         interface_state.synth_level = param_synth_level.Process();
         interface_state.duty_cycle = param_duty_cycle.Process();
+        interface_state.gate_onset = param_gate_onset.Process();
         interface_state.wave_blend = toggle_wave_shape.Pressed() ?
             EffectState::wave_blend_max : EffectState::wave_blend_min;
         interface_state.follow_envelope = toggle_envelope.Pressed();

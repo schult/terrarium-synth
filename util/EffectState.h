@@ -11,12 +11,16 @@ struct EffectState
     static constexpr float duty_cycle_min = 0.5;
     static constexpr float duty_cycle_max = 1.0;
 
+    static constexpr float gate_onset_min = 0.000001;
+    static constexpr float gate_onset_max = 0.75;
+
     static constexpr float wave_blend_min = 0.0;
     static constexpr float wave_blend_max = 1.0;
 
     float dry_level = dry_level_min;
     float synth_level = synth_level_min;
     float duty_cycle = duty_cycle_min;
+    float gate_onset = gate_onset_min;
     float wave_blend = wave_blend_min;
     bool follow_envelope = false;
 
