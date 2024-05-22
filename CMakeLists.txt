@@ -10,6 +10,7 @@ set(FIRMWARE_SOURCES
     util/Led.h
     util/Led.cpp
     util/LinearRamp.h
+    util/SvFilter.h
     util/Terrarium.h
     util/Terrarium.cpp
     util/TriangleSynth.h
