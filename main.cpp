@@ -11,6 +11,7 @@
 #include <util/Blink.h>
 #include <util/EffectState.h>
 #include <util/LinearRamp.h>
+#include <util/SvFilter.h>
 #include <util/Terrarium.h>
 #include <util/TriangleSynth.h>
 
@@ -43,6 +44,7 @@ void processAudioBlock(
     static q::phase_iterator phase;
     static q::basic_pulse_osc pulse_synth;
     static TriangleSynth triangle_synth;
+    static SvFilter filter;
 
     const auto& s = use_preset ? preset_state : interface_state;
 
@@ -51,6 +53,8 @@ void processAudioBlock(
 
     pulse_synth.width(s.duty_cycle);
     triangle_synth.setSkew(s.duty_cycle);
+
+    filter.config(s.filter_corner, sample_rate, s.filter_q);
 
     for (size_t i = 0; i < size; ++i)
     {
@@ -65,9 +69,10 @@ void processAudioBlock(
         const auto synth_envelope = gate_level *
             (s.follow_envelope ? dry_envelope : 0.25f);
 
-        const auto synth_signal = synth_envelope *
-            std::lerp(triangle_synth(phase), pulse_synth(phase), s.wave_blend);
+        filter.update(
+            std::lerp(triangle_synth(phase), pulse_synth(phase), s.wave_blend));
         phase++;
+        const auto synth_signal = synth_envelope * filter.lowPass();
 
         const auto mix =
             (dry_signal * s.dry_level) + (synth_signal * s.synth_level);
@@ -88,6 +93,8 @@ int main()
     daisy::Parameter param_synth_level;
     daisy::Parameter param_duty_cycle;
     daisy::Parameter param_gate_onset;
+    daisy::Parameter param_filter_corner;
+    daisy::Parameter param_filter_q;
 
     auto& knobs = terrarium.knobs;
     param_dry_level.Init(
@@ -110,6 +117,16 @@ int main()
         EffectState::gate_onset_min,
         EffectState::gate_onset_max,
         daisy::Parameter::LOGARITHMIC);
+    param_filter_corner.Init(
+        knobs[4],
+        EffectState::filter_corner_min,
+        EffectState::filter_corner_max,
+        daisy::Parameter::LOGARITHMIC);
+    param_filter_q.Init(
+        knobs[5],
+        EffectState::filter_q_min,
+        EffectState::filter_q_max,
+        daisy::Parameter::LINEAR);
 
     auto& toggle_wave_shape = terrarium.toggles[0];
     auto& toggle_envelope = terrarium.toggles[1];
@@ -162,6 +179,8 @@ int main()
         interface_state.synth_level = param_synth_level.Process();
         interface_state.duty_cycle = param_duty_cycle.Process();
         interface_state.gate_onset = param_gate_onset.Process();
+        interface_state.filter_corner = param_filter_corner.Process();
+        interface_state.filter_q = param_filter_q.Process();
         interface_state.wave_blend = toggle_wave_shape.Pressed() ?
             EffectState::wave_blend_max : EffectState::wave_blend_min;
         interface_state.follow_envelope = toggle_envelope.Pressed();
