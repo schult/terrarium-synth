@@ -9,6 +9,7 @@ set(FIRMWARE_SOURCES
     util/EffectState.h
     util/Led.h
     util/Led.cpp
+    util/LinearRamp.h
     util/Terrarium.h
     util/Terrarium.cpp
     util/TriangleSynth.h
