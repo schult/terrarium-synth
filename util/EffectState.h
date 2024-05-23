@@ -16,8 +16,8 @@ struct EffectState
     static constexpr float gate_onset_min = 0.000001;
     static constexpr float gate_onset_max = 0.75;
 
-    static constexpr float filter_corner_min = 100;
-    static constexpr float filter_corner_max = 24000;
+    static constexpr float filter_min = 2;
+    static constexpr float filter_max = 200;
 
     static constexpr float filter_q_min = 0.5;
     static constexpr float filter_q_max = 6;
@@ -29,7 +29,7 @@ struct EffectState
     float synth_level = synth_level_min;
     float duty_cycle = duty_cycle_min;
     float gate_onset = gate_onset_min;
-    float filter_corner = filter_corner_max;
+    float filter = filter_max;
     float filter_q = filter_q_max;
     float wave_blend = wave_blend_min;
     bool follow_envelope = false;
@@ -41,7 +41,7 @@ struct EffectState
             .dry_level = clamp(dry_level, dry_level_min, dry_level_max),
             .synth_level = clamp(synth_level, synth_level_min, synth_level_max),
             .duty_cycle = clamp(duty_cycle, duty_cycle_min, duty_cycle_max),
-            .filter_corner = clamp(filter_corner, filter_corner_min, filter_corner_max),
+            .filter = clamp(filter, filter_min, filter_max),
             .filter_q = clamp(filter_q, filter_q_min, filter_q_max),
             .wave_blend = clamp(wave_blend, wave_blend_min, wave_blend_max),
             .follow_envelope = follow_envelope,

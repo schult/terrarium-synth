@@ -1,8 +1,9 @@
 #pragma once
 
-#include <cmath>
+#include <cassert>
 #include <numbers>
 
+#include <q/detail/fast_math.hpp>
 #include <q/support/frequency.hpp>
 
 // Algorithm source: https://arxiv.org/pdf/2111.05592
@@ -30,7 +31,9 @@ public:
         _q = q;
 
         constexpr auto pi = std::numbers::pi_v<float>;
-        const auto k = std::tan(pi * cycfi::q::as_float(corner) / sample_rate);
+        const auto f = cycfi::q::as_float(corner) / sample_rate;
+        assert(f <= 0.5); // fastertan expects input in [-pi/2, pi/2]
+        const auto k = fastertan(pi * f);
 
         _k = k;
         _q_inv = 1 / q;

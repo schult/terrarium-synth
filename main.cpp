@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 
 #include <daisy_seed.h>
@@ -54,7 +55,9 @@ void processAudioBlock(
     pulse_synth.width(s.duty_cycle);
     triangle_synth.setSkew(s.duty_cycle);
 
-    filter.config(s.filter_corner, sample_rate, s.filter_q);
+    const auto frequency = pd.get_frequency();
+    const auto corner = std::clamp(s.filter * frequency, 100.0f, 23000.0f );
+    filter.config(corner, sample_rate, s.filter_q);
 
     for (size_t i = 0; i < size; ++i)
     {
@@ -93,7 +96,7 @@ int main()
     daisy::Parameter param_synth_level;
     daisy::Parameter param_duty_cycle;
     daisy::Parameter param_gate_onset;
-    daisy::Parameter param_filter_corner;
+    daisy::Parameter param_filter;
     daisy::Parameter param_filter_q;
 
     auto& knobs = terrarium.knobs;
@@ -117,10 +120,10 @@ int main()
         EffectState::gate_onset_min,
         EffectState::gate_onset_max,
         daisy::Parameter::LOGARITHMIC);
-    param_filter_corner.Init(
+    param_filter.Init(
         knobs[4],
-        EffectState::filter_corner_min,
-        EffectState::filter_corner_max,
+        EffectState::filter_min,
+        EffectState::filter_max,
         daisy::Parameter::LOGARITHMIC);
     param_filter_q.Init(
         knobs[5],
@@ -179,7 +182,7 @@ int main()
         interface_state.synth_level = param_synth_level.Process();
         interface_state.duty_cycle = param_duty_cycle.Process();
         interface_state.gate_onset = param_gate_onset.Process();
-        interface_state.filter_corner = param_filter_corner.Process();
+        interface_state.filter = param_filter.Process();
         interface_state.filter_q = param_filter_q.Process();
         interface_state.wave_blend = toggle_wave_shape.Pressed() ?
             EffectState::wave_blend_max : EffectState::wave_blend_min;
