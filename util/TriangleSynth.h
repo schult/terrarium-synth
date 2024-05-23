@@ -1,3 +1,5 @@
+#pragma once
+
 #include <q/support/phase.hpp>
 
 class TriangleSynth
