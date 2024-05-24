@@ -99,8 +99,8 @@ int main()
 
     daisy::Parameter param_dry_level;
     daisy::Parameter param_synth_level;
-    daisy::Parameter param_duty_cycle;
     daisy::Parameter param_gate_onset;
+    daisy::Parameter param_duty_cycle;
     daisy::Parameter param_filter;
     daisy::Parameter param_filter_q;
 
@@ -115,16 +115,16 @@ int main()
         EffectState::synth_level_min,
         EffectState::synth_level_max,
         daisy::Parameter::LINEAR);
-    param_duty_cycle.Init(
-        knobs[2],
-        EffectState::duty_cycle_min,
-        EffectState::duty_cycle_max,
-        daisy::Parameter::LINEAR);
     param_gate_onset.Init(
-        knobs[3],
+        knobs[2],
         EffectState::gate_onset_min,
         EffectState::gate_onset_max,
         daisy::Parameter::LOGARITHMIC);
+    param_duty_cycle.Init(
+        knobs[3],
+        EffectState::duty_cycle_min,
+        EffectState::duty_cycle_max,
+        daisy::Parameter::LINEAR);
     param_filter.Init(
         knobs[4],
         EffectState::filter_min,
@@ -185,8 +185,8 @@ int main()
         interface_state.dry_level =
             param_dry_level.Process() - dry_level_offset;
         interface_state.synth_level = param_synth_level.Process();
-        interface_state.duty_cycle = param_duty_cycle.Process();
         interface_state.gate_onset = param_gate_onset.Process();
+        interface_state.duty_cycle = param_duty_cycle.Process();
         interface_state.filter = param_filter.Process();
         interface_state.filter_q = param_filter_q.Process();
         interface_state.wave_blend = toggle_wave_shape.Pressed() ?
