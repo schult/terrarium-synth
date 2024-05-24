@@ -45,7 +45,8 @@ void processAudioBlock(
     static q::phase_iterator phase;
     static q::basic_pulse_osc pulse_synth;
     static TriangleSynth triangle_synth;
-    static SvFilter filter;
+    static SvFilter low_pass;
+    static SvFilter high_pass;
 
     const auto& s = use_preset ? preset_state : interface_state;
 
@@ -55,9 +56,10 @@ void processAudioBlock(
     pulse_synth.width(s.duty_cycle);
     triangle_synth.setSkew(s.duty_cycle);
 
-    const auto frequency = pd.get_frequency();
-    const auto corner = std::clamp(s.filter * frequency, 100.0f, 23000.0f );
-    filter.config(corner, sample_rate, s.filter_q);
+    const auto lp_corner = s.lowPassCorner(pd.get_frequency());
+    const auto hp_corner = s.highPassCorner(pd.get_frequency());
+    low_pass.config(lp_corner, sample_rate, s.filter_q);
+    high_pass.config(hp_corner, sample_rate, s.filter_q);
 
     for (size_t i = 0; i < size; ++i)
     {
@@ -72,10 +74,13 @@ void processAudioBlock(
         const auto synth_envelope = gate_level *
             (s.follow_envelope ? dry_envelope : 0.25f);
 
-        filter.update(
-            std::lerp(triangle_synth(phase), pulse_synth(phase), s.wave_blend));
+        const auto oscillator_signal =
+            std::lerp(triangle_synth(phase), pulse_synth(phase), s.wave_blend);
+        low_pass.update(oscillator_signal);
+        high_pass.update(oscillator_signal);
+        const auto synth_signal = synth_envelope *
+            s.blendFilters(low_pass.lowPass(), high_pass.highPass());
         phase++;
-        const auto synth_signal = synth_envelope * filter.lowPass();
 
         const auto mix =
             (dry_signal * s.dry_level) + (synth_signal * s.synth_level);
@@ -124,7 +129,7 @@ int main()
         knobs[4],
         EffectState::filter_min,
         EffectState::filter_max,
-        daisy::Parameter::LOGARITHMIC);
+        daisy::Parameter::LINEAR);
     param_filter_q.Init(
         knobs[5],
         EffectState::filter_q_min,

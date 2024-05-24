@@ -21,15 +21,6 @@ public:
 
     void config(cycfi::q::frequency corner, float sample_rate, float q=0.707)
     {
-        if ((corner == _corner) && (sample_rate == _sample_rate) && (q == _q))
-        {
-            return;
-        }
-
-        _corner = corner;
-        _sample_rate = sample_rate;
-        _q = q;
-
         constexpr auto pi = std::numbers::pi_v<float>;
         const auto f = cycfi::q::as_float(corner) / sample_rate;
         assert(f <= 0.5); // fastertan expects input in [-pi/2, pi/2]
@@ -76,10 +67,6 @@ public:
     }
 
 private:
-    cycfi::q::frequency _corner = 0;
-    float _sample_rate = 0;
-    float _q = 0;
-
     float _k = 0;
     float _q_inv = 0;
     float _c1 = 0;
