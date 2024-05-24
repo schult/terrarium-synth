@@ -27,6 +27,9 @@ struct EffectState
     static constexpr float wave_blend_min = 0.0;
     static constexpr float wave_blend_max = 1.0;
 
+    static constexpr float envelope_influence_min = 0.0;
+    static constexpr float envelope_influence_max = 1.0;
+
     float dry_level = dry_level_min;
     float synth_level = synth_level_min;
     float gate_onset = gate_onset_min;
@@ -34,7 +37,7 @@ struct EffectState
     float filter = 0;
     float filter_q = filter_q_min;
     float wave_blend = wave_blend_min;
-    bool follow_envelope = false;
+    float envelope_influence = envelope_influence_min;
 
     float lowPassCorner(float frequency) const
     {
@@ -72,7 +75,8 @@ struct EffectState
             .filter = clamp(filter, filter_min, filter_max),
             .filter_q = clamp(filter_q, filter_q_min, filter_q_max),
             .wave_blend = clamp(wave_blend, wave_blend_min, wave_blend_max),
-            .follow_envelope = follow_envelope,
+            .envelope_influence = clamp(envelope_influence,
+                envelope_influence_min, envelope_influence_max),
         };
     }
 };

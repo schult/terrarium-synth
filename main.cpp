@@ -72,7 +72,7 @@ void processAudioBlock(
         const auto dry_envelope = envelope_follower(std::abs(dry_signal));
         const auto gate_level = ramp(gate(dry_envelope) ? 1 : 0);
         const auto synth_envelope = gate_level *
-            (s.follow_envelope ? dry_envelope : 0.25f);
+            std::lerp(0.25f, dry_envelope, s.envelope_influence);
 
         const auto oscillator_signal =
             std::lerp(triangle_synth(phase), pulse_synth(phase), s.wave_blend);
@@ -191,6 +191,8 @@ int main()
         interface_state.filter_q = param_filter_q.Process();
         interface_state.wave_blend = toggle_wave_shape.Pressed() ?
             EffectState::wave_blend_max : EffectState::wave_blend_min;
-        interface_state.follow_envelope = toggle_envelope.Pressed();
+        interface_state.envelope_influence = toggle_envelope.Pressed() ?
+            EffectState::envelope_influence_max :
+            EffectState::envelope_influence_min;
     });
 }
