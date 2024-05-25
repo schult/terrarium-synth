@@ -177,7 +177,7 @@ int main()
             preset_written = false;
         }
 
-        if ((stomp_preset.TimeHeldMs() > 5000) && !preset_written)
+        if ((stomp_preset.TimeHeldMs() > 1000) && !preset_written)
         {
             preset_state = interface_state;
 
