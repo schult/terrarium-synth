@@ -27,6 +27,7 @@ bool enable_effect = false;
 bool use_preset = false;
 bool use_blend = false;
 float blend_duration = 1000; // ms
+float gate_onset = 0.5;
 
 //=============================================================================
 void processAudioBlock(
@@ -61,8 +62,8 @@ void processAudioBlock(
         use_preset ? preset_state :
         interface_state;
 
-    gate.onset_threshold(s.gate_onset);
-    gate.release_threshold(q::lin_to_db(s.gate_onset) - 12_dB);
+    gate.onset_threshold(gate_onset);
+    gate.release_threshold(q::lin_to_db(gate_onset) - 12_dB);
 
     pulse_synth.width(s.duty_cycle);
     triangle_synth.setSkew(s.duty_cycle);
@@ -129,8 +130,8 @@ int main()
         daisy::Parameter::LINEAR);
     param_gate_onset.Init(
         knobs[2],
-        EffectState::gate_onset_min,
-        EffectState::gate_onset_max,
+        0.000001,
+        0.75,
         daisy::Parameter::LOGARITHMIC);
     param_duty_cycle.Init(
         knobs[3],
@@ -198,7 +199,7 @@ int main()
         interface_state.dry_level =
             param_dry_level.Process() - dry_level_offset;
         interface_state.synth_level = param_synth_level.Process();
-        interface_state.gate_onset = param_gate_onset.Process();
+        gate_onset = param_gate_onset.Process();
         interface_state.duty_cycle = param_duty_cycle.Process();
         interface_state.filter = param_filter.Process();
         interface_state.filter_q = param_filter_q.Process();

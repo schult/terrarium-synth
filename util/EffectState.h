@@ -12,9 +12,6 @@ struct EffectState
     static constexpr float synth_level_min = 0;
     static constexpr float synth_level_max = 1;
 
-    static constexpr float gate_onset_min = 0.000001;
-    static constexpr float gate_onset_max = 0.75;
-
     static constexpr float duty_cycle_min = 0.5;
     static constexpr float duty_cycle_max = 1.0;
 
@@ -32,7 +29,6 @@ struct EffectState
 
     float dry_level = dry_level_min;
     float synth_level = synth_level_min;
-    float gate_onset = gate_onset_min;
     float duty_cycle = duty_cycle_min;
     float filter = 0;
     float filter_q = filter_q_min;
@@ -70,7 +66,6 @@ struct EffectState
         return EffectState{
             .dry_level = clamp(dry_level, dry_level_min, dry_level_max),
             .synth_level = clamp(synth_level, synth_level_min, synth_level_max),
-            .gate_onset = clamp(gate_onset, gate_onset_min, gate_onset_max),
             .duty_cycle = clamp(duty_cycle, duty_cycle_min, duty_cycle_max),
             .filter = clamp(filter, filter_min, filter_max),
             .filter_q = clamp(filter_q, filter_q_min, filter_q_max),
@@ -86,7 +81,6 @@ EffectState blended(const EffectState& s1, const EffectState& s2, float ratio)
     EffectState result;
     result.dry_level = std::lerp(s1.dry_level, s2.dry_level, ratio);
     result.synth_level = std::lerp(s1.synth_level, s2.synth_level, ratio);
-    result.gate_onset = std::lerp(s1.gate_onset, s2.gate_onset, ratio);
     result.duty_cycle = std::lerp(s1.duty_cycle, s2.duty_cycle, ratio);
     result.filter = std::lerp(s1.filter, s2.filter, ratio);
     result.filter_q = std::lerp(s1.filter_q, s2.filter_q, ratio);
