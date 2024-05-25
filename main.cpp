@@ -25,6 +25,8 @@ EffectState preset_state;
 EffectState DSY_QSPI_BSS saved_preset;
 bool enable_effect = false;
 bool use_preset = false;
+bool use_blend = false;
+float blend_duration = 1000; // ms
 
 //=============================================================================
 void processAudioBlock(
@@ -47,8 +49,17 @@ void processAudioBlock(
     static TriangleSynth triangle_synth;
     static SvFilter low_pass;
     static SvFilter high_pass;
+    static uint32_t blend_begin = terrarium.seed.system.GetNow();
 
-    const auto& s = use_preset ? preset_state : interface_state;
+    const auto now = terrarium.seed.system.GetNow();
+    const auto blend_elapsed = (now - blend_begin);
+    const auto blend_ratio =
+        std::clamp((blend_elapsed / blend_duration), 0.0f, 1.0f);
+
+    const auto& s =
+        use_blend ? blended(preset_state, interface_state, blend_ratio) :
+        use_preset ? preset_state :
+        interface_state;
 
     gate.onset_threshold(s.gate_onset);
     gate.release_threshold(q::lin_to_db(s.gate_onset) - 12_dB);
@@ -67,6 +78,7 @@ void processAudioBlock(
         if (pd(dry_signal))
         {
             phase.set(pd.get_frequency(), sample_rate);
+            if (pd.is_note_shift()) blend_begin = terrarium.seed.system.GetNow();
         }
 
         const auto dry_envelope = envelope_follower(std::abs(dry_signal));
@@ -138,6 +150,7 @@ int main()
 
     auto& toggle_wave_shape = terrarium.toggles[0];
     auto& toggle_envelope = terrarium.toggles[1];
+    auto& toggle_blend = terrarium.toggles[3];
 
     auto& stomp_bypass = terrarium.stomps[0];
     auto& stomp_preset = terrarium.stomps[1];
@@ -194,5 +207,6 @@ int main()
         interface_state.envelope_influence = toggle_envelope.Pressed() ?
             EffectState::envelope_influence_max :
             EffectState::envelope_influence_min;
+        use_blend = toggle_blend.Pressed();
     });
 }

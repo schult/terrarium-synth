@@ -80,3 +80,18 @@ struct EffectState
         };
     }
 };
+
+EffectState blended(const EffectState& s1, const EffectState& s2, float ratio)
+{
+    EffectState result;
+    result.dry_level = std::lerp(s1.dry_level, s2.dry_level, ratio);
+    result.synth_level = std::lerp(s1.synth_level, s2.synth_level, ratio);
+    result.gate_onset = std::lerp(s1.gate_onset, s2.gate_onset, ratio);
+    result.duty_cycle = std::lerp(s1.duty_cycle, s2.duty_cycle, ratio);
+    result.filter = std::lerp(s1.filter, s2.filter, ratio);
+    result.filter_q = std::lerp(s1.filter_q, s2.filter_q, ratio);
+    result.wave_blend = std::lerp(s1.wave_blend, s2.wave_blend, ratio);
+    result.envelope_influence =
+        std::lerp(s1.envelope_influence, s2.envelope_influence, ratio);
+    return result;
+}
