@@ -163,18 +163,37 @@ int main()
     bool preset_written = false;
     Blink blink;
 
+    uint32_t last_tap = 0;
+
 
     terrarium.seed.StartAudio(processAudioBlock);
 
     terrarium.Loop(100, [&](){
+        const auto now = terrarium.seed.system.GetNow();
+        const auto elapsed = now - last_tap;
+
         if (stomp_bypass.RisingEdge())
         {
             enable_effect = !enable_effect;
         }
 
+        use_blend = toggle_blend.Pressed();
+
         if (stomp_preset.RisingEdge())
         {
-            use_preset = !use_preset;
+            if (use_blend)
+            {
+                if (elapsed < 2000)
+                {
+                    blend_duration = elapsed;
+                }
+                last_tap = now;
+            }
+            else
+            {
+                use_preset = !use_preset;
+            }
+
             preset_written = false;
         }
 
@@ -193,8 +212,29 @@ int main()
         }
 
         led_enable.Set(enable_effect ? 1 : 0);
-        auto preset_led_on = blink.enabled() ? blink.process() : use_preset;
-        preset_led.Set(preset_led_on ? 1 : 0);
+
+        if (use_blend)
+        {
+            if (blink.enabled())
+            {
+                preset_led.Set(blink.process() ? 1 : 0);
+            }
+            else if (stomp_preset.Pressed())
+            {
+                preset_led.Set(1);
+            }
+            else
+            {
+                uint32_t duration = blend_duration;
+                preset_led.Set(
+                    std::abs((2 * (elapsed % duration) / blend_duration) - 1));
+            }
+        }
+        else
+        {
+            auto preset_led_on = blink.enabled() ? blink.process() : use_preset;
+            preset_led.Set(preset_led_on ? 1 : 0);
+        }
 
         interface_state.dry_level =
             param_dry_level.Process() - dry_level_offset;
@@ -208,6 +248,5 @@ int main()
         interface_state.envelope_influence = toggle_envelope.Pressed() ?
             EffectState::envelope_influence_max :
             EffectState::envelope_influence_min;
-        use_blend = toggle_blend.Pressed();
     });
 }
