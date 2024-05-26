@@ -46,8 +46,8 @@ void processAudioBlock(
     static LinearRamp ramp(0, 0.008);
     static q::pitch_detector pd(min_freq, max_freq, sample_rate, hysteresis);
     static q::phase_iterator phase;
-    static q::basic_pulse_osc pulse_synth;
     static TriangleSynth triangle_synth;
+    static q::basic_pulse_osc pulse_synth;
     static SvFilter low_pass;
     static SvFilter high_pass;
     static uint32_t blend_begin = terrarium.seed.system.GetNow();
@@ -65,8 +65,8 @@ void processAudioBlock(
     gate.onset_threshold(gate_onset);
     gate.release_threshold(q::lin_to_db(gate_onset) - 12_dB);
 
-    pulse_synth.width(s.duty_cycle);
     triangle_synth.setSkew(s.duty_cycle);
+    pulse_synth.width(s.duty_cycle);
 
     const auto lp_corner = s.lowPassCorner(pd.get_frequency());
     const auto hp_corner = s.highPassCorner(pd.get_frequency());
@@ -88,7 +88,8 @@ void processAudioBlock(
             std::lerp(0.25f, dry_envelope, s.envelope_influence);
 
         const auto oscillator_signal =
-            std::lerp(triangle_synth(phase), pulse_synth(phase), s.wave_blend);
+            (triangle_synth(phase) * s.triangle_mix) +
+            (pulse_synth(phase) * s.pulse_mix);
         low_pass.update(oscillator_signal);
         high_pass.update(oscillator_signal);
         const auto synth_signal = synth_envelope *
@@ -149,8 +150,9 @@ int main()
         EffectState::filter_q_max,
         daisy::Parameter::LINEAR);
 
-    auto& toggle_wave_shape = terrarium.toggles[0];
-    auto& toggle_envelope = terrarium.toggles[1];
+    auto& toggle_wave1 = terrarium.toggles[0];
+    auto& toggle_wave2 = terrarium.toggles[1];
+    auto& toggle_envelope = terrarium.toggles[2];
     auto& toggle_blend = terrarium.toggles[3];
 
     auto& stomp_bypass = terrarium.stomps[0];
@@ -243,8 +245,14 @@ int main()
         interface_state.duty_cycle = param_duty_cycle.Process();
         interface_state.filter = param_filter.Process();
         interface_state.filter_q = param_filter_q.Process();
-        interface_state.wave_blend = toggle_wave_shape.Pressed() ?
-            EffectState::wave_blend_max : EffectState::wave_blend_min;
+
+        const auto w1 = toggle_wave1.Pressed();
+        const auto w2 = toggle_wave2.Pressed();
+        interface_state.triangle_mix =
+            ( !w1 && !w2 ) ? EffectState::mix_max : EffectState::mix_min;
+        interface_state.pulse_mix =
+            ( !w1 &&  w2 ) ? EffectState::mix_max : EffectState::mix_min;
+
         interface_state.envelope_influence = toggle_envelope.Pressed() ?
             EffectState::envelope_influence_max :
             EffectState::envelope_influence_min;
