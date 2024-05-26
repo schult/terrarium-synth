@@ -78,7 +78,7 @@ struct EffectState
     }
 };
 
-inline EffectState blended(
+constexpr EffectState blended(
     const EffectState& s1, const EffectState& s2, float ratio)
 {
     EffectState result;
