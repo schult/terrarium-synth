@@ -15,16 +15,18 @@ public:
     void setShapeRatio(float r) { _shape_ratio = r; }
     void setFilterRatio(float r) { _filter_ratio = r; }
     void setResonanceRatio(float r) { _resonance_ratio = r; }
-    void setPulseEnabled(bool on) { _pulse_ratio = on ? ratio_max : ratio_min; }
     void setTriangleEnabled(bool on) { _triangle_ratio = on ? ratio_max : ratio_min; }
+    void setPulseEnabled(bool on) { _pulse_ratio = on ? ratio_max : ratio_min; }
+    void setNoiseEnabled(bool on) { _noise_ratio = on ? ratio_max : ratio_min; }
     void setEnvelopeEnabled(bool on) { _envelope_ratio = on ? ratio_max : ratio_min; }
 
     float dryLevel() const { return dry_mapping(_dry_ratio); }
     float synthLevel() const { return synth_mapping(_synth_ratio); }
     float shape() const { return shape_mapping(_shape_ratio); }
     float resonance() const { return resonance_mapping(_resonance_ratio); }
-    float pulseMix() const { return _pulse_ratio; }
     float triangleMix() const { return _triangle_ratio; }
+    float pulseMix() const { return _pulse_ratio; }
+    float noiseMix() const { return _noise_ratio; }
     float envelopeInfluence() const { return _envelope_ratio; }
 
     float lowPassCorner(float frequency) const
@@ -59,8 +61,9 @@ public:
         s._shape_ratio = clamp(_shape_ratio, ratio_min, ratio_max);
         s._filter_ratio = clamp(_filter_ratio, ratio_min, ratio_max);
         s._resonance_ratio = clamp(_resonance_ratio, ratio_min, ratio_max);
-        s._pulse_ratio = clamp(_pulse_ratio, ratio_min, ratio_max);
         s._triangle_ratio = clamp(_triangle_ratio, ratio_min, ratio_max);
+        s._pulse_ratio = clamp(_pulse_ratio, ratio_min, ratio_max);
+        s._noise_ratio = clamp(_noise_ratio, ratio_min, ratio_max);
         s._envelope_ratio = clamp(_envelope_ratio, ratio_min, ratio_max);
         return s;
     }
@@ -86,8 +89,9 @@ private:
     float _shape_ratio = ratio_min;
     float _filter_ratio = (ratio_max + ratio_min) / 2;
     float _resonance_ratio = ratio_min;
-    float _pulse_ratio = ratio_min;
     float _triangle_ratio = ratio_min;
+    float _pulse_ratio = ratio_min;
+    float _noise_ratio = ratio_min;
     float _envelope_ratio = ratio_min;
 };
 
@@ -103,8 +107,9 @@ constexpr EffectState blended(
     s._shape_ratio = lerp(s1._shape_ratio, s2._shape_ratio, ratio);
     s._filter_ratio = lerp(s1._filter_ratio, s2._filter_ratio, ratio);
     s._resonance_ratio = lerp(s1._resonance_ratio, s2._resonance_ratio, ratio);
-    s._pulse_ratio = lerp(s1._pulse_ratio, s2._pulse_ratio, ratio);
     s._triangle_ratio = lerp(s1._triangle_ratio, s2._triangle_ratio, ratio);
+    s._pulse_ratio = lerp(s1._pulse_ratio, s2._pulse_ratio, ratio);
+    s._noise_ratio = lerp(s1._noise_ratio, s2._noise_ratio, ratio);
     s._envelope_ratio = lerp(s1._envelope_ratio, s2._envelope_ratio, ratio);
     return s;
 }

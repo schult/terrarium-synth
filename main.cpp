@@ -13,6 +13,7 @@
 #include <util/EffectState.h>
 #include <util/LinearRamp.h>
 #include <util/Mapping.h>
+#include <util/NoiseSynth.h>
 #include <util/SvFilter.h>
 #include <util/Terrarium.h>
 #include <util/TriangleSynth.h>
@@ -51,6 +52,7 @@ void processAudioBlock(
     static q::phase_iterator phase;
     static TriangleSynth triangle_synth;
     static q::basic_pulse_osc pulse_synth;
+    static NoiseSynth noise_synth;
     static SvFilter low_pass;
     static SvFilter high_pass;
     static uint32_t mod_begin = terrarium.seed.system.GetNow();
@@ -72,6 +74,7 @@ void processAudioBlock(
     const auto shape = s.shape();
     triangle_synth.setSkew(shape);
     pulse_synth.width(shape);
+    noise_synth.setShape(shape); // TODO: Pick something more semantically significant
 
     const auto resonance = s.resonance();
     const auto lp_corner = s.lowPassCorner(pd.get_frequency());
@@ -96,7 +99,8 @@ void processAudioBlock(
 
         const auto oscillator_signal =
             (triangle_synth(phase) * s.triangleMix()) +
-            (pulse_synth(phase) * s.pulseMix());
+            (pulse_synth(phase) * s.pulseMix()) +
+            (noise_synth() * s.noiseMix());
         low_pass.update(oscillator_signal);
         high_pass.update(oscillator_signal);
         const auto synth_signal = synth_envelope *
@@ -159,6 +163,7 @@ int main()
         const auto w2 = toggle_wave2.Pressed();
         interface_state.setTriangleEnabled(!w1 && !w2);
         interface_state.setPulseEnabled(!w1 && w2);
+        interface_state.setNoiseEnabled(w1 && !w2);
 
         interface_state.setEnvelopeEnabled(toggle_envelope.Pressed());
         use_modulate = toggle_modulate.Pressed();
