@@ -98,8 +98,9 @@ void processAudioBlock(
             s.blendFilters(low_pass.lowPass(), high_pass.highPass());
         phase++;
 
+        const auto dry_level = s.dry_mapping(s.dry_level);
         const auto mix =
-            (dry_signal * s.dry_level) + (synth_signal * s.synth_level);
+            (dry_signal * dry_level) + (synth_signal * s.synth_level);
         out[0][i] = enable_effect ? mix : dry_signal;
         out[1][i] = 0;
     }
@@ -110,22 +111,14 @@ int main()
 {
     terrarium.Init();
 
-    // This offset keeps unity gain at noon. Assumes min == 0.
-    constexpr auto dry_level_offset = 1 / (EffectState::dry_mapping.max - 2);
-
-    daisy::Parameter param_dry_level;
     daisy::Parameter param_synth_level;
     daisy::Parameter param_gate_onset;
     daisy::Parameter param_duty_cycle;
     daisy::Parameter param_filter;
     daisy::Parameter param_filter_q;
 
+    auto& knob_dry_level = terrarium.knobs[0];
     auto& knobs = terrarium.knobs;
-    param_dry_level.Init(
-        knobs[0],
-        EffectState::dry_mapping.min + dry_level_offset,
-        EffectState::dry_mapping.max + dry_level_offset,
-        daisy::Parameter::LOGARITHMIC);
     param_synth_level.Init(
         knobs[1],
         EffectState::synth_mapping.min,
@@ -240,8 +233,7 @@ int main()
             preset_led.Set(preset_led_on ? 1 : 0);
         }
 
-        interface_state.dry_level =
-            param_dry_level.Process() - dry_level_offset;
+        interface_state.dry_level = knob_dry_level.Process();
         interface_state.synth_level = param_synth_level.Process();
         gate_onset = param_gate_onset.Process();
         interface_state.duty_cycle = param_duty_cycle.Process();
