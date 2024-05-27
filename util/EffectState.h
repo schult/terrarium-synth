@@ -16,20 +16,17 @@ struct EffectState
     static constexpr LogMapping high_pass_mapping{0, 6, 49};
     static constexpr LogMapping resonance_mapping{0.707, 6};
 
-    static constexpr float mix_min = 0.0;
-    static constexpr float mix_max = 1.0;
-
-    static constexpr float envelope_influence_min = 0.0;
-    static constexpr float envelope_influence_max = 1.0;
+    static constexpr float ratio_min = 0.0;
+    static constexpr float ratio_max = 1.0;
 
     float dry = 0;
     float synth = 0;
     float shape = 0;
     float filter = 0.5;
     float resonance = resonance_mapping.min;
-    float pulse_mix = mix_min;
-    float triangle_mix = mix_min;
-    float envelope_influence = envelope_influence_min;
+    float pulse_mix = ratio_min;
+    float triangle_mix = ratio_min;
+    float envelope_influence = ratio_min;
 
     float lowPassCorner(float frequency) const
     {
@@ -56,15 +53,15 @@ struct EffectState
     {
         using std::clamp;
         return EffectState{
-            .dry = std::clamp(dry, 0.0f, 1.0f),
-            .synth = std::clamp(synth, 0.0f, 1.0f),
-            .shape = std::clamp(shape, 0.0f, 1.0f),
-            .filter = std::clamp(filter, 0.0f, 1.0f),
-            .resonance = std::clamp(resonance, 0.0f, 1.0f),
-            .pulse_mix = clamp(pulse_mix, mix_min, mix_max),
-            .triangle_mix = clamp(triangle_mix, mix_min, mix_max),
+            .dry = std::clamp(dry, ratio_min, ratio_max),
+            .synth = std::clamp(synth, ratio_min, ratio_max),
+            .shape = std::clamp(shape, ratio_min, ratio_max),
+            .filter = std::clamp(filter, ratio_min, ratio_max),
+            .resonance = std::clamp(resonance, ratio_min, ratio_max),
+            .pulse_mix = clamp(pulse_mix, ratio_min, ratio_max),
+            .triangle_mix = clamp(triangle_mix, ratio_min, ratio_max),
             .envelope_influence = clamp(envelope_influence,
-                envelope_influence_min, envelope_influence_max),
+                ratio_min, ratio_max),
         };
     }
 };

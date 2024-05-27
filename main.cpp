@@ -223,12 +223,11 @@ int main()
         const auto w1 = toggle_wave1.Pressed();
         const auto w2 = toggle_wave2.Pressed();
         interface_state.triangle_mix =
-            ( !w1 && !w2 ) ? EffectState::mix_max : EffectState::mix_min;
+            ( !w1 && !w2 ) ? EffectState::ratio_max : EffectState::ratio_min;
         interface_state.pulse_mix =
-            ( !w1 &&  w2 ) ? EffectState::mix_max : EffectState::mix_min;
+            ( !w1 &&  w2 ) ? EffectState::ratio_max : EffectState::ratio_min;
 
         interface_state.envelope_influence = toggle_envelope.Pressed() ?
-            EffectState::envelope_influence_max :
-            EffectState::envelope_influence_min;
+            EffectState::ratio_max : EffectState::ratio_min;
     });
 }
