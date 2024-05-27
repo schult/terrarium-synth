@@ -12,12 +12,15 @@
 #include <util/Blink.h>
 #include <util/EffectState.h>
 #include <util/LinearRamp.h>
+#include <util/Mapping.h>
 #include <util/SvFilter.h>
 #include <util/Terrarium.h>
 #include <util/TriangleSynth.h>
 
 namespace q = cycfi::q;
 using namespace q::literals;
+
+constexpr LogMapping trigger_mapping{0.0001, 0.1, 0.75};
 
 Terrarium terrarium;
 EffectState interface_state;
@@ -27,7 +30,7 @@ bool enable_effect = false;
 bool use_preset = false;
 bool use_blend = false;
 float blend_duration = 1000; // ms
-float gate_onset = 0.5;
+float trigger_ratio = 1;
 
 //=============================================================================
 void processAudioBlock(
@@ -62,8 +65,9 @@ void processAudioBlock(
         use_preset ? preset_state :
         interface_state;
 
-    gate.onset_threshold(gate_onset);
-    gate.release_threshold(q::lin_to_db(gate_onset) - 12_dB);
+    const auto trigger = trigger_mapping(trigger_ratio);
+    gate.onset_threshold(trigger);
+    gate.release_threshold(q::lin_to_db(trigger) - 12_dB);
 
     const auto duty_cycle = s.duty_mapping(s.duty_cycle);
     triangle_synth.setSkew(duty_cycle);
@@ -112,19 +116,14 @@ int main()
 {
     terrarium.Init();
 
-    daisy::Parameter param_gate_onset;
     daisy::Parameter param_filter;
     daisy::Parameter param_filter_q;
 
     auto& knob_dry_level = terrarium.knobs[0];
     auto& knob_synth_level = terrarium.knobs[1];
+    auto& knob_trigger = terrarium.knobs[2];
     auto& knob_duty_cycle = terrarium.knobs[3];
     auto& knobs = terrarium.knobs;
-    param_gate_onset.Init(
-        knobs[2],
-        0.000001,
-        0.75,
-        daisy::Parameter::LOGARITHMIC);
     param_filter.Init(
         knobs[4],
         EffectState::filter_min,
@@ -226,7 +225,7 @@ int main()
 
         interface_state.dry_level = knob_dry_level.Process();
         interface_state.synth_level = knob_synth_level.Process();
-        gate_onset = param_gate_onset.Process();
+        trigger_ratio = knob_trigger.Process();
         interface_state.duty_cycle = knob_duty_cycle.Process();
         interface_state.filter = param_filter.Process();
         interface_state.filter_q = param_filter_q.Process();
