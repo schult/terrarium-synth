@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <type_traits>
 
 #include <q/detail/fast_math.hpp>
 
@@ -77,6 +78,7 @@ struct EffectState
         };
     }
 };
+static_assert(std::is_trivially_copyable_v<EffectState>);
 
 constexpr EffectState blended(
     const EffectState& s1, const EffectState& s2, float ratio)
