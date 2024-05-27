@@ -26,7 +26,7 @@ struct EffectState
     static constexpr float envelope_influence_max = 1.0;
 
     float dry_level = 0;
-    float synth_level = synth_mapping.min;
+    float synth_level = 0;
     float duty_cycle = duty_mapping.min;
     float filter = 0;
     float filter_q = res_mapping.min;
@@ -60,7 +60,7 @@ struct EffectState
         using std::clamp;
         return EffectState{
             .dry_level = std::clamp(dry_level, 0.0f, 1.0f),
-            .synth_level = synth_mapping.clamp(synth_level),
+            .synth_level = std::clamp(synth_level, 0.0f, 1.0f),
             .duty_cycle = duty_mapping.clamp(duty_cycle),
             .filter = clamp(filter, filter_min, filter_max),
             .filter_q = res_mapping.clamp(filter_q),
