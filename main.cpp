@@ -65,13 +65,15 @@ void processAudioBlock(
     gate.onset_threshold(gate_onset);
     gate.release_threshold(q::lin_to_db(gate_onset) - 12_dB);
 
-    triangle_synth.setSkew(s.duty_cycle);
-    pulse_synth.width(s.duty_cycle);
+    const auto duty_cycle = s.duty_cycle;
+    triangle_synth.setSkew(duty_cycle);
+    pulse_synth.width(duty_cycle);
 
+    const auto filter_q = s.filter_q;
     const auto lp_corner = s.lowPassCorner(pd.get_frequency());
     const auto hp_corner = s.highPassCorner(pd.get_frequency());
-    low_pass.config(lp_corner, sample_rate, s.filter_q);
-    high_pass.config(hp_corner, sample_rate, s.filter_q);
+    low_pass.config(lp_corner, sample_rate, filter_q);
+    high_pass.config(hp_corner, sample_rate, filter_q);
 
     for (size_t i = 0; i < size; ++i)
     {
@@ -109,7 +111,7 @@ int main()
     terrarium.Init();
 
     // This offset keeps unity gain at noon. Assumes min == 0.
-    constexpr auto dry_level_offset = 1 / (EffectState::dry_level_max - 2);
+    constexpr auto dry_level_offset = 1 / (EffectState::dry_mapping.max - 2);
 
     daisy::Parameter param_dry_level;
     daisy::Parameter param_synth_level;
@@ -121,13 +123,13 @@ int main()
     auto& knobs = terrarium.knobs;
     param_dry_level.Init(
         knobs[0],
-        EffectState::dry_level_min + dry_level_offset,
-        EffectState::dry_level_max + dry_level_offset,
+        EffectState::dry_mapping.min + dry_level_offset,
+        EffectState::dry_mapping.max + dry_level_offset,
         daisy::Parameter::LOGARITHMIC);
     param_synth_level.Init(
         knobs[1],
-        EffectState::synth_level_min,
-        EffectState::synth_level_max,
+        EffectState::synth_mapping.min,
+        EffectState::synth_mapping.max,
         daisy::Parameter::LINEAR);
     param_gate_onset.Init(
         knobs[2],
@@ -136,8 +138,8 @@ int main()
         daisy::Parameter::LOGARITHMIC);
     param_duty_cycle.Init(
         knobs[3],
-        EffectState::duty_cycle_min,
-        EffectState::duty_cycle_max,
+        EffectState::duty_mapping.min,
+        EffectState::duty_mapping.max,
         daisy::Parameter::LINEAR);
     param_filter.Init(
         knobs[4],
@@ -146,8 +148,8 @@ int main()
         daisy::Parameter::LINEAR);
     param_filter_q.Init(
         knobs[5],
-        EffectState::filter_q_min,
-        EffectState::filter_q_max,
+        EffectState::res_mapping.min,
+        EffectState::res_mapping.max,
         daisy::Parameter::LINEAR);
 
     auto& toggle_wave1 = terrarium.toggles[0];

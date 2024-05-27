@@ -4,3 +4,6 @@
 [submodule "lib/libDaisy"]
 	path = lib/libDaisy
 	url = https://github.com/schult/libDaisy.git
+[submodule "lib/gcem"]
+	path = lib/gcem
+	url = https://github.com/kthohr/gcem.git

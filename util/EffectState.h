@@ -5,22 +5,19 @@
 
 #include <q/detail/fast_math.hpp>
 
+#include <util/Mapping.h>
+
 struct EffectState
 {
-    static constexpr float dry_level_min = 0;
-    static constexpr float dry_level_max = 20;
-
-    static constexpr float synth_level_min = 0;
-    static constexpr float synth_level_max = 1;
-
-    static constexpr float duty_cycle_min = 0.5;
-    static constexpr float duty_cycle_max = 1.0;
+    static constexpr LogMapping dry_mapping{0, 1, 20};
+    static constexpr LogMapping synth_mapping{0, 1, 4}; // TODO: Match dry mapping
+    static constexpr LogMapping duty_mapping{0.5, 1.0}; // TODO: Log or Linear?
+    static constexpr LogMapping low_pass_mapping{2, 200};
+    static constexpr LogMapping high_pass_mapping{0, 6, 49};
+    static constexpr LogMapping res_mapping{0.707, 6}; // TODO: max=4?
 
     static constexpr float filter_min = -1;
     static constexpr float filter_max = 1;
-
-    static constexpr float filter_q_min = 0.707;
-    static constexpr float filter_q_max = 6;
 
     static constexpr float mix_min = 0.0;
     static constexpr float mix_max = 1.0;
@@ -28,11 +25,11 @@ struct EffectState
     static constexpr float envelope_influence_min = 0.0;
     static constexpr float envelope_influence_max = 1.0;
 
-    float dry_level = dry_level_min;
-    float synth_level = synth_level_min;
-    float duty_cycle = duty_cycle_min;
+    float dry_level = dry_mapping.min;
+    float synth_level = synth_mapping.min;
+    float duty_cycle = duty_mapping.min;
     float filter = 0;
-    float filter_q = filter_q_min;
+    float filter_q = res_mapping.min;
     float pulse_mix = mix_min;
     float triangle_mix = mix_min;
     float envelope_influence = envelope_influence_min;
@@ -40,10 +37,7 @@ struct EffectState
     float lowPassCorner(float frequency) const
     {
         const auto f = (filter < 0) ? (filter + 1) : 1;
-        constexpr float max = 5.2983174f; // ln(200)
-        constexpr float min = 0.6931472f; // ln(2)
-        constexpr float range = max - min;
-        const auto factor = fasterexp((f * range) + min);
+        const auto factor = low_pass_mapping(f);
         const auto corner = factor * frequency;
         return std::clamp(corner, 1.0f, 23900.0f );
     }
@@ -51,8 +45,7 @@ struct EffectState
     float highPassCorner(float frequency) const
     {
         const auto f = (filter < 0) ? 0 : filter;
-        constexpr float range = 3.9120230f; // ln(50)
-        const auto factor = fasterexp(f * range) - 1;
+        const auto factor = high_pass_mapping(f);
         const auto corner = factor * frequency;
         return std::clamp(corner, 1.0f, 23900.0f );
     }
@@ -66,11 +59,11 @@ struct EffectState
     {
         using std::clamp;
         return EffectState{
-            .dry_level = clamp(dry_level, dry_level_min, dry_level_max),
-            .synth_level = clamp(synth_level, synth_level_min, synth_level_max),
-            .duty_cycle = clamp(duty_cycle, duty_cycle_min, duty_cycle_max),
+            .dry_level = dry_mapping.clamp(dry_level),
+            .synth_level = synth_mapping.clamp(synth_level),
+            .duty_cycle = duty_mapping.clamp(duty_cycle),
             .filter = clamp(filter, filter_min, filter_max),
-            .filter_q = clamp(filter_q, filter_q_min, filter_q_max),
+            .filter_q = res_mapping.clamp(filter_q),
             .pulse_mix = clamp(pulse_mix, mix_min, mix_max),
             .triangle_mix = clamp(triangle_mix, mix_min, mix_max),
             .envelope_influence = clamp(envelope_influence,
