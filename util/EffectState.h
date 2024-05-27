@@ -16,9 +16,6 @@ struct EffectState
     static constexpr LogMapping high_pass_mapping{0, 6, 49};
     static constexpr LogMapping res_mapping{0.707, 6}; // TODO: max=4?
 
-    static constexpr float filter_min = -1;
-    static constexpr float filter_max = 1;
-
     static constexpr float mix_min = 0.0;
     static constexpr float mix_max = 1.0;
 
@@ -28,7 +25,7 @@ struct EffectState
     float dry_level = 0;
     float synth_level = 0;
     float duty_cycle = 0;
-    float filter = 0;
+    float filter = 0.5;
     float filter_q = res_mapping.min;
     float pulse_mix = mix_min;
     float triangle_mix = mix_min;
@@ -36,23 +33,23 @@ struct EffectState
 
     float lowPassCorner(float frequency) const
     {
-        const auto f = (filter < 0) ? (filter + 1) : 1;
-        const auto factor = low_pass_mapping(f);
+        const auto adjusted_filter = std::clamp((2*filter), 0.0f, 1.0f);
+        const auto factor = low_pass_mapping(adjusted_filter);
         const auto corner = factor * frequency;
         return std::clamp(corner, 1.0f, 23900.0f );
     }
 
     float highPassCorner(float frequency) const
     {
-        const auto f = (filter < 0) ? 0 : filter;
-        const auto factor = high_pass_mapping(f);
+        const auto adjusted_filter = std::clamp((2*filter - 1), 0.0f, 1.0f);
+        const auto factor = high_pass_mapping(adjusted_filter);
         const auto corner = factor * frequency;
         return std::clamp(corner, 1.0f, 23900.0f );
     }
 
     float blendFilters(float low_pass_signal, float high_pass_signal) const
     {
-        return (filter < 0) ? low_pass_signal : high_pass_signal;
+        return (filter < 0.5) ? low_pass_signal : high_pass_signal;
     }
 
     EffectState clamped() const
@@ -62,7 +59,7 @@ struct EffectState
             .dry_level = std::clamp(dry_level, 0.0f, 1.0f),
             .synth_level = std::clamp(synth_level, 0.0f, 1.0f),
             .duty_cycle = std::clamp(duty_cycle, 0.0f, 1.0f),
-            .filter = clamp(filter, filter_min, filter_max),
+            .filter = clamp(filter, 0.0f, 1.0f),
             .filter_q = res_mapping.clamp(filter_q),
             .pulse_mix = clamp(pulse_mix, mix_min, mix_max),
             .triangle_mix = clamp(triangle_mix, mix_min, mix_max),

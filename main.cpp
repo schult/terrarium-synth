@@ -116,19 +116,14 @@ int main()
 {
     terrarium.Init();
 
-    daisy::Parameter param_filter;
     daisy::Parameter param_filter_q;
 
     auto& knob_dry_level = terrarium.knobs[0];
     auto& knob_synth_level = terrarium.knobs[1];
     auto& knob_trigger = terrarium.knobs[2];
     auto& knob_duty_cycle = terrarium.knobs[3];
+    auto& knob_filter = terrarium.knobs[4];
     auto& knobs = terrarium.knobs;
-    param_filter.Init(
-        knobs[4],
-        EffectState::filter_min,
-        EffectState::filter_max,
-        daisy::Parameter::LINEAR);
     param_filter_q.Init(
         knobs[5],
         EffectState::res_mapping.min,
@@ -227,7 +222,7 @@ int main()
         interface_state.synth_level = knob_synth_level.Process();
         trigger_ratio = knob_trigger.Process();
         interface_state.duty_cycle = knob_duty_cycle.Process();
-        interface_state.filter = param_filter.Process();
+        interface_state.filter = knob_filter.Process();
         interface_state.filter_q = param_filter_q.Process();
 
         const auto w1 = toggle_wave1.Pressed();
