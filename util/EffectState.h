@@ -54,11 +54,11 @@ public:
     {
         using std::clamp;
         EffectState s;
-        s._dry_ratio = std::clamp(_dry_ratio, ratio_min, ratio_max);
-        s._synth_ratio = std::clamp(_synth_ratio, ratio_min, ratio_max);
-        s._shape_ratio = std::clamp(_shape_ratio, ratio_min, ratio_max);
-        s._filter_ratio = std::clamp(_filter_ratio, ratio_min, ratio_max);
-        s._resonance_ratio = std::clamp(_resonance_ratio, ratio_min, ratio_max);
+        s._dry_ratio = clamp(_dry_ratio, ratio_min, ratio_max);
+        s._synth_ratio = clamp(_synth_ratio, ratio_min, ratio_max);
+        s._shape_ratio = clamp(_shape_ratio, ratio_min, ratio_max);
+        s._filter_ratio = clamp(_filter_ratio, ratio_min, ratio_max);
+        s._resonance_ratio = clamp(_resonance_ratio, ratio_min, ratio_max);
         s._pulse_ratio = clamp(_pulse_ratio, ratio_min, ratio_max);
         s._triangle_ratio = clamp(_triangle_ratio, ratio_min, ratio_max);
         s._envelope_ratio = clamp(_envelope_ratio, ratio_min, ratio_max);
@@ -96,14 +96,15 @@ static_assert(std::is_trivially_copyable_v<EffectState>);
 constexpr EffectState blended(
     const EffectState& s1, const EffectState& s2, float ratio)
 {
+    using std::lerp;
     EffectState s;
-    s._dry_ratio = std::lerp(s1._dry_ratio, s2._dry_ratio, ratio);
-    s._synth_ratio = std::lerp(s1._synth_ratio, s2._synth_ratio, ratio);
-    s._shape_ratio = std::lerp(s1._shape_ratio, s2._shape_ratio, ratio);
-    s._filter_ratio = std::lerp(s1._filter_ratio, s2._filter_ratio, ratio);
-    s._resonance_ratio = std::lerp(s1._resonance_ratio, s2._resonance_ratio, ratio);
-    s._pulse_ratio = std::lerp(s1._pulse_ratio, s2._pulse_ratio, ratio);
-    s._triangle_ratio = std::lerp(s1._triangle_ratio, s2._triangle_ratio, ratio);
-    s._envelope_ratio = std::lerp(s1._envelope_ratio, s2._envelope_ratio, ratio);
+    s._dry_ratio = lerp(s1._dry_ratio, s2._dry_ratio, ratio);
+    s._synth_ratio = lerp(s1._synth_ratio, s2._synth_ratio, ratio);
+    s._shape_ratio = lerp(s1._shape_ratio, s2._shape_ratio, ratio);
+    s._filter_ratio = lerp(s1._filter_ratio, s2._filter_ratio, ratio);
+    s._resonance_ratio = lerp(s1._resonance_ratio, s2._resonance_ratio, ratio);
+    s._pulse_ratio = lerp(s1._pulse_ratio, s2._pulse_ratio, ratio);
+    s._triangle_ratio = lerp(s1._triangle_ratio, s2._triangle_ratio, ratio);
+    s._envelope_ratio = lerp(s1._envelope_ratio, s2._envelope_ratio, ratio);
     return s;
 }
