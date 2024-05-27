@@ -29,6 +29,13 @@ public:
     float noiseMix() const { return _noise_ratio; }
     float envelopeInfluence() const { return _envelope_ratio; }
 
+    float noiseSampleDuration(float frequency) const
+    {
+        const auto noise_freq = noise_freq_mapping(ratio_max - _shape_ratio);
+        const auto x = noise_freq / frequency;
+        return x * x;
+    }
+
     float lowPassCorner(float frequency) const
     {
         const auto adjusted_filter =
@@ -77,6 +84,7 @@ private:
     static constexpr LogMapping dry_mapping{0, 1, max_level};
     static constexpr LogMapping synth_mapping{0, 1, max_level};
     static constexpr LinearMapping shape_mapping{0.5, 1.0};
+    static constexpr LinearMapping noise_freq_mapping{64, 3200};
     static constexpr LogMapping low_pass_mapping{2, 200};
     static constexpr LogMapping high_pass_mapping{0, 6, 49};
     static constexpr LogMapping resonance_mapping{0.707, 6};

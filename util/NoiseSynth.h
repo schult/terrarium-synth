@@ -5,9 +5,9 @@
 class NoiseSynth
 {
 public:
-    void setShape(float shape)
+    void setSampleDuration(int duration)
     {
-        _sample_duration = (1.0 - shape) * 256;
+        _sample_duration = duration;
     }
 
     float operator()()
