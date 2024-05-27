@@ -73,11 +73,11 @@ void processAudioBlock(
     triangle_synth.setSkew(duty_cycle);
     pulse_synth.width(duty_cycle);
 
-    const auto filter_q = s.filter_q;
+    const auto resonance = s.resonance_mapping(s.resonance);
     const auto lp_corner = s.lowPassCorner(pd.get_frequency());
     const auto hp_corner = s.highPassCorner(pd.get_frequency());
-    low_pass.config(lp_corner, sample_rate, filter_q);
-    high_pass.config(hp_corner, sample_rate, filter_q);
+    low_pass.config(lp_corner, sample_rate, resonance);
+    high_pass.config(hp_corner, sample_rate, resonance);
 
     for (size_t i = 0; i < size; ++i)
     {
@@ -123,12 +123,7 @@ int main()
     auto& knob_trigger = terrarium.knobs[2];
     auto& knob_duty_cycle = terrarium.knobs[3];
     auto& knob_filter = terrarium.knobs[4];
-    auto& knobs = terrarium.knobs;
-    param_filter_q.Init(
-        knobs[5],
-        EffectState::res_mapping.min,
-        EffectState::res_mapping.max,
-        daisy::Parameter::LINEAR);
+    auto& knob_resonance = terrarium.knobs[5];
 
     auto& toggle_wave1 = terrarium.toggles[0];
     auto& toggle_wave2 = terrarium.toggles[1];
@@ -223,7 +218,7 @@ int main()
         trigger_ratio = knob_trigger.Process();
         interface_state.duty_cycle = knob_duty_cycle.Process();
         interface_state.filter = knob_filter.Process();
-        interface_state.filter_q = param_filter_q.Process();
+        interface_state.resonance = knob_resonance.Process();
 
         const auto w1 = toggle_wave1.Pressed();
         const auto w2 = toggle_wave2.Pressed();

@@ -35,7 +35,8 @@ class LogMapping
 {
 public:
     // min < center < max
-    // (min + center) > 0
+    // center < (min + max) / 2
+    // min + center > 0
     constexpr LogMapping(float _min, float _center, float _max) :
         min(_min),
         max(_max),

@@ -14,7 +14,7 @@ struct EffectState
     static constexpr LinearMapping duty_mapping{0.5, 1.0};
     static constexpr LogMapping low_pass_mapping{2, 200};
     static constexpr LogMapping high_pass_mapping{0, 6, 49};
-    static constexpr LogMapping res_mapping{0.707, 6}; // TODO: max=4?
+    static constexpr LogMapping resonance_mapping{0.707, 6};
 
     static constexpr float mix_min = 0.0;
     static constexpr float mix_max = 1.0;
@@ -26,7 +26,7 @@ struct EffectState
     float synth_level = 0;
     float duty_cycle = 0;
     float filter = 0.5;
-    float filter_q = res_mapping.min;
+    float resonance = resonance_mapping.min;
     float pulse_mix = mix_min;
     float triangle_mix = mix_min;
     float envelope_influence = envelope_influence_min;
@@ -59,8 +59,8 @@ struct EffectState
             .dry_level = std::clamp(dry_level, 0.0f, 1.0f),
             .synth_level = std::clamp(synth_level, 0.0f, 1.0f),
             .duty_cycle = std::clamp(duty_cycle, 0.0f, 1.0f),
-            .filter = clamp(filter, 0.0f, 1.0f),
-            .filter_q = res_mapping.clamp(filter_q),
+            .filter = std::clamp(filter, 0.0f, 1.0f),
+            .resonance = std::clamp(resonance, 0.0f, 1.0f),
             .pulse_mix = clamp(pulse_mix, mix_min, mix_max),
             .triangle_mix = clamp(triangle_mix, mix_min, mix_max),
             .envelope_influence = clamp(envelope_influence,
@@ -78,7 +78,7 @@ constexpr EffectState blended(
     result.synth_level = std::lerp(s1.synth_level, s2.synth_level, ratio);
     result.duty_cycle = std::lerp(s1.duty_cycle, s2.duty_cycle, ratio);
     result.filter = std::lerp(s1.filter, s2.filter, ratio);
-    result.filter_q = std::lerp(s1.filter_q, s2.filter_q, ratio);
+    result.resonance = std::lerp(s1.resonance, s2.resonance, ratio);
     result.pulse_mix = std::lerp(s1.pulse_mix, s2.pulse_mix, ratio);
     result.triangle_mix = std::lerp(s1.triangle_mix, s2.triangle_mix, ratio);
     result.envelope_influence =
