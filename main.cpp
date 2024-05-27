@@ -65,7 +65,7 @@ void processAudioBlock(
     gate.onset_threshold(gate_onset);
     gate.release_threshold(q::lin_to_db(gate_onset) - 12_dB);
 
-    const auto duty_cycle = s.duty_cycle;
+    const auto duty_cycle = s.duty_mapping(s.duty_cycle);
     triangle_synth.setSkew(duty_cycle);
     pulse_synth.width(duty_cycle);
 
@@ -113,23 +113,18 @@ int main()
     terrarium.Init();
 
     daisy::Parameter param_gate_onset;
-    daisy::Parameter param_duty_cycle;
     daisy::Parameter param_filter;
     daisy::Parameter param_filter_q;
 
     auto& knob_dry_level = terrarium.knobs[0];
     auto& knob_synth_level = terrarium.knobs[1];
+    auto& knob_duty_cycle = terrarium.knobs[3];
     auto& knobs = terrarium.knobs;
     param_gate_onset.Init(
         knobs[2],
         0.000001,
         0.75,
         daisy::Parameter::LOGARITHMIC);
-    param_duty_cycle.Init(
-        knobs[3],
-        EffectState::duty_mapping.min,
-        EffectState::duty_mapping.max,
-        daisy::Parameter::LINEAR);
     param_filter.Init(
         knobs[4],
         EffectState::filter_min,
@@ -232,7 +227,7 @@ int main()
         interface_state.dry_level = knob_dry_level.Process();
         interface_state.synth_level = knob_synth_level.Process();
         gate_onset = param_gate_onset.Process();
-        interface_state.duty_cycle = param_duty_cycle.Process();
+        interface_state.duty_cycle = knob_duty_cycle.Process();
         interface_state.filter = param_filter.Process();
         interface_state.filter_q = param_filter_q.Process();
 

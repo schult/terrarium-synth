@@ -11,7 +11,7 @@ struct EffectState
 {
     static constexpr LogMapping dry_mapping{0, 1, 20};
     static constexpr LogMapping synth_mapping{0, 1, 4}; // TODO: Match dry mapping
-    static constexpr LogMapping duty_mapping{0.5, 1.0}; // TODO: Log or Linear?
+    static constexpr LinearMapping duty_mapping{0.5, 1.0};
     static constexpr LogMapping low_pass_mapping{2, 200};
     static constexpr LogMapping high_pass_mapping{0, 6, 49};
     static constexpr LogMapping res_mapping{0.707, 6}; // TODO: max=4?
@@ -27,7 +27,7 @@ struct EffectState
 
     float dry_level = 0;
     float synth_level = 0;
-    float duty_cycle = duty_mapping.min;
+    float duty_cycle = 0;
     float filter = 0;
     float filter_q = res_mapping.min;
     float pulse_mix = mix_min;
@@ -61,7 +61,7 @@ struct EffectState
         return EffectState{
             .dry_level = std::clamp(dry_level, 0.0f, 1.0f),
             .synth_level = std::clamp(synth_level, 0.0f, 1.0f),
-            .duty_cycle = duty_mapping.clamp(duty_cycle),
+            .duty_cycle = std::clamp(duty_cycle, 0.0f, 1.0f),
             .filter = clamp(filter, filter_min, filter_max),
             .filter_q = res_mapping.clamp(filter_q),
             .pulse_mix = clamp(pulse_mix, mix_min, mix_max),

@@ -1,18 +1,43 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 
 #include <gcem.hpp>
 #include <q/detail/fast_math.hpp>
 
+class LinearMapping
+{
+public:
+    // min < max
+    constexpr LinearMapping(float _min, float _max) :
+        min(_min),
+        max(_max)
+    {
+    }
+
+    // 0 <= x <= 1
+    float operator()(float x) const
+    {
+        return std::lerp(min, max, x);
+    }
+
+    constexpr float clamp(float y) const
+    {
+        return std::clamp(y, min, max);
+    }
+
+    const float min;
+    const float max;
+};
+
 class LogMapping
 {
 public:
-    // max > center > min
+    // min < center < max
     // (min + center) > 0
     constexpr LogMapping(float _min, float _center, float _max) :
         min(_min),
-        center(_center),
         max(_max),
         offset(calculateOffset(_min, _center, _max)),
         log_min(gcem::log(_min + offset)),
@@ -20,10 +45,9 @@ public:
     {
     }
 
-    // max > min > 0
+    // 0 < min < max
     constexpr LogMapping(float _min, float _max) :
         min(_min),
-        center(calculateCenter(_min, _max)),
         max(_max),
         offset(0),
         log_min(gcem::log(_min)),
@@ -43,7 +67,6 @@ public:
     }
 
     const float min;
-    const float center;
     const float max;
 
 private:
