@@ -29,7 +29,7 @@ EffectState DSY_QSPI_BSS saved_preset;
 bool enable_effect = false;
 bool use_preset = false;
 bool use_modulate = false;
-float blend_duration = 1000; // ms
+float mod_duration = 1000; // ms
 float trigger_ratio = 1;
 
 //=============================================================================
@@ -53,15 +53,15 @@ void processAudioBlock(
     static q::basic_pulse_osc pulse_synth;
     static SvFilter low_pass;
     static SvFilter high_pass;
-    static uint32_t blend_begin = terrarium.seed.system.GetNow();
+    static uint32_t mod_begin = terrarium.seed.system.GetNow();
 
     const auto now = terrarium.seed.system.GetNow();
-    const auto blend_elapsed = (now - blend_begin);
-    const auto blend_ratio =
-        std::clamp((blend_elapsed / blend_duration), 0.0f, 1.0f);
+    const auto mod_elapsed = (now - mod_begin);
+    const auto mod_ratio =
+        std::clamp((mod_elapsed / mod_duration), 0.0f, 1.0f);
 
     const auto& s =
-        use_modulate ? blended(preset_state, interface_state, blend_ratio) :
+        use_modulate ? blended(preset_state, interface_state, mod_ratio) :
         use_preset ? preset_state :
         interface_state;
 
@@ -85,7 +85,7 @@ void processAudioBlock(
         if (pd(dry_signal))
         {
             phase.set(pd.get_frequency(), sample_rate);
-            if (pd.is_note_shift()) blend_begin = terrarium.seed.system.GetNow();
+            if (pd.is_note_shift()) mod_begin = terrarium.seed.system.GetNow();
         }
 
         const auto no_envelope = 1 / EffectState::max_level;
@@ -148,29 +148,73 @@ int main()
         const auto now = terrarium.seed.system.GetNow();
         const auto elapsed = now - last_tap;
 
+        interface_state.setDryRatio(knob_dry.Process());
+        interface_state.setSynthRatio(knob_synth.Process());
+        trigger_ratio = knob_trigger.Process();
+        interface_state.setShapeRatio(knob_shape.Process());
+        interface_state.setFilterRatio(knob_filter.Process());
+        interface_state.setResonanceRatio(knob_resonance.Process());
+
+        const auto w1 = toggle_wave1.Pressed();
+        const auto w2 = toggle_wave2.Pressed();
+        interface_state.setTriangleEnabled(!w1 && !w2);
+        interface_state.setPulseEnabled(!w1 && w2);
+
+        interface_state.setEnvelopeEnabled(toggle_envelope.Pressed());
+        use_modulate = toggle_modulate.Pressed();
+
         if (stomp_bypass.RisingEdge())
         {
             enable_effect = !enable_effect;
         }
 
-        use_modulate = toggle_modulate.Pressed();
+        led_enable.Set(enable_effect ? 1 : 0);
 
-        if (stomp_preset.RisingEdge())
+
+        if (use_modulate)
         {
-            if (use_modulate)
+            if (stomp_preset.RisingEdge())
             {
                 if (elapsed < 2000)
                 {
-                    blend_duration = elapsed;
+                    mod_duration = elapsed;
                 }
                 last_tap = now;
+                preset_written = false;
+            }
+
+            if (blink.enabled())
+            {
+                led_preset.Set(blink.process() ? 1 : 0);
+            }
+            else if (stomp_preset.Pressed())
+            {
+                led_preset.Set(1);
             }
             else
             {
+                float i = 0;
+                const auto mod_ratio = std::modf(elapsed / mod_duration, &i);
+                const auto brightness = std::abs(2*mod_ratio - 1);
+                led_preset.Set(brightness);
+            }
+        }
+        else
+        {
+            if (stomp_preset.RisingEdge())
+            {
                 use_preset = !use_preset;
+                preset_written = false;
             }
 
-            preset_written = false;
+            if (blink.enabled())
+            {
+                led_preset.Set(blink.process() ? 1 : 0);
+            }
+            else
+            {
+                led_preset.Set(use_preset ? 1 : 0);
+            }
         }
 
         if ((stomp_preset.TimeHeldMs() > 1000) && !preset_written)
@@ -186,44 +230,5 @@ int main()
             preset_written = true;
             blink.reset();
         }
-
-        led_enable.Set(enable_effect ? 1 : 0);
-
-        if (use_modulate)
-        {
-            if (blink.enabled())
-            {
-                led_preset.Set(blink.process() ? 1 : 0);
-            }
-            else if (stomp_preset.Pressed())
-            {
-                led_preset.Set(1);
-            }
-            else
-            {
-                uint32_t duration = blend_duration;
-                led_preset.Set(
-                    std::abs((2 * (elapsed % duration) / blend_duration) - 1));
-            }
-        }
-        else
-        {
-            auto preset_led_on = blink.enabled() ? blink.process() : use_preset;
-            led_preset.Set(preset_led_on ? 1 : 0);
-        }
-
-        interface_state.setDryRatio(knob_dry.Process());
-        interface_state.setSynthRatio(knob_synth.Process());
-        trigger_ratio = knob_trigger.Process();
-        interface_state.setShapeRatio(knob_shape.Process());
-        interface_state.setFilterRatio(knob_filter.Process());
-        interface_state.setResonanceRatio(knob_resonance.Process());
-
-        const auto w1 = toggle_wave1.Pressed();
-        const auto w2 = toggle_wave2.Pressed();
-        interface_state.setTriangleEnabled(!w1 && !w2);
-        interface_state.setPulseEnabled(!w1 && w2);
-
-        interface_state.setEnvelopeEnabled(toggle_envelope.Pressed());
     });
 }
