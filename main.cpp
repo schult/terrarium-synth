@@ -69,11 +69,11 @@ void processAudioBlock(
     gate.onset_threshold(trigger);
     gate.release_threshold(q::lin_to_db(trigger) - 12_dB);
 
-    const auto shape = s.shape_mapping(s.shape);
+    const auto shape = s.shape();
     triangle_synth.setSkew(shape);
     pulse_synth.width(shape);
 
-    const auto resonance = s.resonance_mapping(s.resonance);
+    const auto resonance = s.resonance();
     const auto lp_corner = s.lowPassCorner(pd.get_frequency());
     const auto hp_corner = s.highPassCorner(pd.get_frequency());
     low_pass.config(lp_corner, sample_rate, resonance);
@@ -91,21 +91,19 @@ void processAudioBlock(
         const auto dry_envelope = envelope_follower(std::abs(dry_signal));
         const auto gate_level = ramp(gate(dry_envelope) ? 1 : 0);
         const auto synth_envelope = gate_level *
-            std::lerp(0.25f, dry_envelope, s.envelope_influence);
+            std::lerp(0.25f, dry_envelope, s.envelopeInfluence());
 
         const auto oscillator_signal =
-            (triangle_synth(phase) * s.triangle_mix) +
-            (pulse_synth(phase) * s.pulse_mix);
+            (triangle_synth(phase) * s.triangleMix()) +
+            (pulse_synth(phase) * s.pulseMix());
         low_pass.update(oscillator_signal);
         high_pass.update(oscillator_signal);
         const auto synth_signal = synth_envelope *
             s.blendFilters(low_pass.lowPass(), high_pass.highPass());
         phase++;
 
-        const auto dry_level = s.dry_mapping(s.dry);
-        const auto synth_level = s.synth_mapping(s.synth);
         const auto mix =
-            (dry_signal * dry_level) + (synth_signal * synth_level);
+            (dry_signal * s.dryLevel()) + (synth_signal * s.synthLevel());
         out[0][i] = enable_effect ? mix : dry_signal;
         out[1][i] = 0;
     }
@@ -213,21 +211,18 @@ int main()
             led_preset.Set(preset_led_on ? 1 : 0);
         }
 
-        interface_state.dry = knob_dry.Process();
-        interface_state.synth = knob_synth.Process();
+        interface_state.setDryRatio(knob_dry.Process());
+        interface_state.setSynthRatio(knob_synth.Process());
         trigger_ratio = knob_trigger.Process();
-        interface_state.shape = knob_shape.Process();
-        interface_state.filter = knob_filter.Process();
-        interface_state.resonance = knob_resonance.Process();
+        interface_state.setShapeRatio(knob_shape.Process());
+        interface_state.setFilterRatio(knob_filter.Process());
+        interface_state.setResonanceRatio(knob_resonance.Process());
 
         const auto w1 = toggle_wave1.Pressed();
         const auto w2 = toggle_wave2.Pressed();
-        interface_state.triangle_mix =
-            ( !w1 && !w2 ) ? EffectState::ratio_max : EffectState::ratio_min;
-        interface_state.pulse_mix =
-            ( !w1 &&  w2 ) ? EffectState::ratio_max : EffectState::ratio_min;
+        interface_state.setTriangleEnabled(!w1 && !w2);
+        interface_state.setPulseEnabled(!w1 && w2);
 
-        interface_state.envelope_influence = toggle_envelope.Pressed() ?
-            EffectState::ratio_max : EffectState::ratio_min;
+        interface_state.setEnvelopeEnabled(toggle_envelope.Pressed());
     });
 }
