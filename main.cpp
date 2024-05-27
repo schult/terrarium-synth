@@ -88,10 +88,11 @@ void processAudioBlock(
             if (pd.is_note_shift()) blend_begin = terrarium.seed.system.GetNow();
         }
 
+        const auto no_envelope = 1 / EffectState::max_level;
         const auto dry_envelope = envelope_follower(std::abs(dry_signal));
         const auto gate_level = ramp(gate(dry_envelope) ? 1 : 0);
         const auto synth_envelope = gate_level *
-            std::lerp(0.25f, dry_envelope, s.envelopeInfluence());
+            std::lerp(no_envelope, dry_envelope, s.envelopeInfluence());
 
         const auto oscillator_signal =
             (triangle_synth(phase) * s.triangleMix()) +

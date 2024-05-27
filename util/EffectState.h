@@ -65,12 +65,14 @@ public:
         return s;
     }
 
+    static constexpr float max_level = 20;
+
 private:
     friend constexpr EffectState blended(
         const EffectState& s1, const EffectState& s2, float ratio);
 
-    static constexpr LogMapping dry_mapping{0, 1, 20};
-    static constexpr LogMapping synth_mapping{0, 1, 4}; // TODO: Match dry mapping
+    static constexpr LogMapping dry_mapping{0, 1, max_level};
+    static constexpr LogMapping synth_mapping{0, 1, max_level};
     static constexpr LinearMapping shape_mapping{0.5, 1.0};
     static constexpr LogMapping low_pass_mapping{2, 200};
     static constexpr LogMapping high_pass_mapping{0, 6, 49};
