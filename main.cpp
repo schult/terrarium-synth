@@ -28,7 +28,7 @@ EffectState preset_state;
 EffectState DSY_QSPI_BSS saved_preset;
 bool enable_effect = false;
 bool use_preset = false;
-bool use_blend = false;
+bool use_modulate = false;
 float blend_duration = 1000; // ms
 float trigger_ratio = 1;
 
@@ -61,7 +61,7 @@ void processAudioBlock(
         std::clamp((blend_elapsed / blend_duration), 0.0f, 1.0f);
 
     const auto& s =
-        use_blend ? blended(preset_state, interface_state, blend_ratio) :
+        use_modulate ? blended(preset_state, interface_state, blend_ratio) :
         use_preset ? preset_state :
         interface_state;
 
@@ -69,9 +69,9 @@ void processAudioBlock(
     gate.onset_threshold(trigger);
     gate.release_threshold(q::lin_to_db(trigger) - 12_dB);
 
-    const auto duty_cycle = s.duty_mapping(s.duty_cycle);
-    triangle_synth.setSkew(duty_cycle);
-    pulse_synth.width(duty_cycle);
+    const auto shape = s.shape_mapping(s.shape);
+    triangle_synth.setSkew(shape);
+    pulse_synth.width(shape);
 
     const auto resonance = s.resonance_mapping(s.resonance);
     const auto lp_corner = s.lowPassCorner(pd.get_frequency());
@@ -102,8 +102,8 @@ void processAudioBlock(
             s.blendFilters(low_pass.lowPass(), high_pass.highPass());
         phase++;
 
-        const auto dry_level = s.dry_mapping(s.dry_level);
-        const auto synth_level = s.synth_mapping(s.synth_level);
+        const auto dry_level = s.dry_mapping(s.dry);
+        const auto synth_level = s.synth_mapping(s.synth);
         const auto mix =
             (dry_signal * dry_level) + (synth_signal * synth_level);
         out[0][i] = enable_effect ? mix : dry_signal;
@@ -118,23 +118,23 @@ int main()
 
     daisy::Parameter param_filter_q;
 
-    auto& knob_dry_level = terrarium.knobs[0];
-    auto& knob_synth_level = terrarium.knobs[1];
+    auto& knob_dry = terrarium.knobs[0];
+    auto& knob_synth = terrarium.knobs[1];
     auto& knob_trigger = terrarium.knobs[2];
-    auto& knob_duty_cycle = terrarium.knobs[3];
+    auto& knob_shape = terrarium.knobs[3];
     auto& knob_filter = terrarium.knobs[4];
     auto& knob_resonance = terrarium.knobs[5];
 
     auto& toggle_wave1 = terrarium.toggles[0];
     auto& toggle_wave2 = terrarium.toggles[1];
     auto& toggle_envelope = terrarium.toggles[2];
-    auto& toggle_blend = terrarium.toggles[3];
+    auto& toggle_modulate = terrarium.toggles[3];
 
     auto& stomp_bypass = terrarium.stomps[0];
     auto& stomp_preset = terrarium.stomps[1];
 
     auto& led_enable = terrarium.leds[0];
-    auto& preset_led = terrarium.leds[1];
+    auto& led_preset = terrarium.leds[1];
 
     preset_state = saved_preset.clamped();
     bool preset_written = false;
@@ -154,11 +154,11 @@ int main()
             enable_effect = !enable_effect;
         }
 
-        use_blend = toggle_blend.Pressed();
+        use_modulate = toggle_modulate.Pressed();
 
         if (stomp_preset.RisingEdge())
         {
-            if (use_blend)
+            if (use_modulate)
             {
                 if (elapsed < 2000)
                 {
@@ -190,33 +190,33 @@ int main()
 
         led_enable.Set(enable_effect ? 1 : 0);
 
-        if (use_blend)
+        if (use_modulate)
         {
             if (blink.enabled())
             {
-                preset_led.Set(blink.process() ? 1 : 0);
+                led_preset.Set(blink.process() ? 1 : 0);
             }
             else if (stomp_preset.Pressed())
             {
-                preset_led.Set(1);
+                led_preset.Set(1);
             }
             else
             {
                 uint32_t duration = blend_duration;
-                preset_led.Set(
+                led_preset.Set(
                     std::abs((2 * (elapsed % duration) / blend_duration) - 1));
             }
         }
         else
         {
             auto preset_led_on = blink.enabled() ? blink.process() : use_preset;
-            preset_led.Set(preset_led_on ? 1 : 0);
+            led_preset.Set(preset_led_on ? 1 : 0);
         }
 
-        interface_state.dry_level = knob_dry_level.Process();
-        interface_state.synth_level = knob_synth_level.Process();
+        interface_state.dry = knob_dry.Process();
+        interface_state.synth = knob_synth.Process();
         trigger_ratio = knob_trigger.Process();
-        interface_state.duty_cycle = knob_duty_cycle.Process();
+        interface_state.shape = knob_shape.Process();
         interface_state.filter = knob_filter.Process();
         interface_state.resonance = knob_resonance.Process();
 
