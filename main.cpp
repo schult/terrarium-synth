@@ -121,7 +121,7 @@ void processAudioBlock(
 //=============================================================================
 int main()
 {
-    terrarium.Init();
+    terrarium.Init(true);
 
     daisy::Parameter param_filter_q;
 
