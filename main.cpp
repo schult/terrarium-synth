@@ -123,8 +123,6 @@ int main()
 {
     terrarium.Init(true);
 
-    daisy::Parameter param_filter_q;
-
     auto& knob_dry = terrarium.knobs[0];
     auto& knob_synth = terrarium.knobs[1];
     auto& knob_trigger = terrarium.knobs[2];
