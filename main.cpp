@@ -22,8 +22,6 @@
 namespace q = cycfi::q;
 using namespace q::literals;
 
-constexpr LogMapping trigger_mapping{0.0001, 0.1, 0.75};
-
 Terrarium terrarium;
 EffectState interface_state;
 EffectState preset_state;
@@ -69,6 +67,7 @@ void processAudioBlock(
         use_preset ? preset_state :
         interface_state;
 
+    constexpr LogMapping trigger_mapping{0.0001, 0.1, 0.75};
     const auto trigger = trigger_mapping(trigger_ratio);
     gate.onset_threshold(trigger);
     gate.release_threshold(q::lin_to_db(trigger) - 12_dB);
@@ -107,8 +106,10 @@ void processAudioBlock(
             (noise_synth() * s.noiseMix());
         low_pass.update(oscillator_signal);
         high_pass.update(oscillator_signal);
-        const auto synth_signal = synth_envelope *
-            s.blendFilters(low_pass.lowPass(), high_pass.highPass());
+        const auto filtered_signal =
+            (low_pass.lowPass() * s.lowPassMix()) +
+            (high_pass.highPass() * s.highPassMix());
+        const auto synth_signal = synth_envelope * filtered_signal;
         phase++;
 
         const auto mix =

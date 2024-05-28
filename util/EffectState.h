@@ -54,9 +54,14 @@ public:
         return std::clamp(corner, 1.0f, 23900.0f );
     }
 
-    float blendFilters(float low_pass_signal, float high_pass_signal) const
+    float lowPassMix() const
     {
-        return (_filter_ratio < 0.5) ? low_pass_signal : high_pass_signal;
+        return (_filter_ratio < 0.5) ? 1 : 0;
+    }
+
+    float highPassMix() const
+    {
+        return (_filter_ratio < 0.5) ? 0 : 1;
     }
 
     EffectState clamped() const
