@@ -1,4 +1,4 @@
-# SynthPedal
+# Terrarium Synth
 
 This is firmware for a pitch-tracking synthesizer effect pedal. It runs on an
 [Electro-Smith Daisy Seed](https://www.electro-smith.com/daisy/daisy) mounted
