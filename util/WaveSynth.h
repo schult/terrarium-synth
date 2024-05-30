@@ -49,9 +49,16 @@ public:
         }
 
         // Triangle waves are quieter than everything else, so boost them.
+        const auto tri_boost = 1.8;
         const auto x = shape - 2;
-        const auto ratio = 1 - std::clamp(x*x, 0.0f, 1.0f);
-        _boost = (2 * ratio) + 1;
+        const auto tri_ratio = 1 - std::clamp(x*x, 0.0f, 1.0f);
+        _boost = (tri_boost * tri_ratio) + 1;
+
+        // Sawtooth needs a little boost too
+        const auto saw_boost = 0.4;
+        const auto y = shape - 3;
+        const auto saw_ratio = 1 - std::clamp(y*y, 0.0f, 1.0f);
+        _boost *= (saw_boost * saw_ratio) + 1;
     }
 
     constexpr float operator()(cycfi::q::phase p) const
