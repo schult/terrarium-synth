@@ -6,7 +6,8 @@
 
 struct Settings
 {
-    EffectState preset;
+    EffectState preset1;
+    EffectState preset2;
     float mod_duration = 1000;
 };
 

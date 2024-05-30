@@ -25,7 +25,9 @@ using namespace q::literals;
 
 Terrarium terrarium;
 EffectState interface_state;
-EffectState preset_state;
+EffectState preset1;
+EffectState preset2;
+EffectState* active_preset = &preset1;
 bool enable_effect = false;
 bool use_preset = false;
 bool use_modulate = false;
@@ -61,8 +63,8 @@ void processAudioBlock(
         std::clamp((mod_elapsed / mod_duration), 0.0f, 1.0f);
 
     const auto& s =
-        use_modulate ? blended(preset_state, interface_state, mod_ratio) :
-        use_preset ? preset_state :
+        use_modulate ? blended(*active_preset, interface_state, mod_ratio) :
+        use_preset ? *active_preset :
         interface_state;
 
     constexpr LogMapping trigger_mapping{0.0001, 0.1, 0.75};
@@ -119,7 +121,8 @@ int main()
     terrarium.Init(true);
 
     auto settings = loadSettings();
-    preset_state = settings.preset;
+    preset1 = settings.preset1;
+    preset2 = settings.preset2;
     mod_duration = settings.mod_duration;
 
     auto& knob_dry = terrarium.knobs[0];
@@ -132,6 +135,7 @@ int main()
     auto& toggle_noise = terrarium.toggles[0];
     auto& toggle_envelope = terrarium.toggles[1];
     auto& toggle_modulate = terrarium.toggles[2];
+    auto& toggle_preset_bank = terrarium.toggles[3];
 
     auto& stomp_bypass = terrarium.stomps[0];
     auto& stomp_preset = terrarium.stomps[1];
@@ -161,6 +165,7 @@ int main()
         interface_state.setNoiseEnabled(toggle_noise.Pressed());
         interface_state.setEnvelopeEnabled(toggle_envelope.Pressed());
         use_modulate = toggle_modulate.Pressed();
+        active_preset = toggle_preset_bank.Pressed() ? &preset2 : &preset1;
 
         if (stomp_bypass.RisingEdge())
         {
@@ -218,9 +223,10 @@ int main()
 
         if ((stomp_preset.TimeHeldMs() > 1000) && !preset_written)
         {
-            preset_state = interface_state;
+            *active_preset = interface_state;
 
-            settings.preset = preset_state;
+            settings.preset1 = preset1;
+            settings.preset2 = preset2;
             settings.mod_duration = mod_duration;
             saveSettings(terrarium.seed.qspi, settings);
 
@@ -230,7 +236,8 @@ int main()
 
         if ((elapsed > 10000) && (mod_duration != settings.mod_duration))
         {
-            settings.preset = preset_state;
+            settings.preset1 = preset1;
+            settings.preset2 = preset2;
             settings.mod_duration = mod_duration;
             saveSettings(terrarium.seed.qspi, settings);
         }

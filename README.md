@@ -53,7 +53,10 @@ Selects the preset function:
 - **↓:** Toggle
 
 #### P1/P2
-Coming soon...
+Selects the active preset slot:
+
+- **↑:** P2
+- **↓:** P1
 
 ### Foot Switches and LEDs
 
@@ -62,16 +65,16 @@ Enables and disables the pedal. The LED is lit when the pedal is active.
 
 #### Preset
 When the preset foot switch is held for more than one second, the LED will
-blink three times, and the current control settings will be saved. The stored
-settings include all knobs except **Trigger**, and all toggle switches except
-**Mod**.
+blink three times, and the current control settings will be saved to the active
+preset slot. The stored settings include the **Noise** and **Env** toggle
+switches and all knobs except **Trigger**.
 
 When the **Mod** switch is set to ↓ (Toggle), the foot switch selects between
-the current control settings (LED off) and the saved preset (LED on).
+the current control settings (LED off) and the active preset (LED on).
 
 When the **Mod** switch is set to ↑ (Modulate), the preset LED will flash at
 the current modulation rate. Each note played will blend over time from the
-saved preset to the current control settings. The modulation rate is set via
+active preset to the current control settings. The modulation rate is set via
 tap tempo using the preset foot switch.
 
 ## Building
