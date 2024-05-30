@@ -19,12 +19,10 @@ Sets the output level of the synth signal.
 #### Trigger
 Sets the trigger threshold for the synth.
 
-#### Shape
-Controls a parameter of the generated wave:
+#### Wave
+Sets the wave shape. Morphs from pulse, to square, to triangle, to sawtooth.
 
-- **Pulse:**  Duty cycle. Square wave at minimum.
-- **Triangle:**  Skew. Triangle wave at minimum, sawtooth wave at maximum.
-- **Noise:**  Pitch offset.
+When the **Noise** switch is set to ↑ (Noise), this adjusts the pitch instead.
 
 #### Filter
 - **Left:** low-pass frequency
@@ -36,13 +34,11 @@ Boosts the signal at the active filter's corner frequency.
 
 ### Toggle Switches
 
-#### Wave1, Wave2
-Selects the synth oscillator type:
+#### Noise
+Changes the synth oscillator to generate white noise.
 
-- **↓↓:** Triangle wave
-- **↓↑:** Pulse wave
-- **↑↑:** Nothing yet...
-- **↑↓:** Noise
+- **↑:** Noise
+- **↓:** Wave
 
 #### Env (Envelope)
 Selects the synth envelope:
@@ -55,6 +51,9 @@ Selects the preset function:
 
 - **↑:** Modulate
 - **↓:** Toggle
+
+#### P1/P2
+Coming soon...
 
 ### Foot Switches and LEDs
 

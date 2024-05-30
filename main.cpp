@@ -18,7 +18,7 @@
 #include <util/PersistentSettings.h>
 #include <util/SvFilter.h>
 #include <util/Terrarium.h>
-#include <util/TriangleSynth.h>
+#include <util/WaveSynth.h>
 
 namespace q = cycfi::q;
 using namespace q::literals;
@@ -49,8 +49,7 @@ void processAudioBlock(
     static LinearRamp ramp(0, 0.008);
     static q::pitch_detector pd(min_freq, max_freq, sample_rate, hysteresis);
     static q::phase_iterator phase;
-    static TriangleSynth triangle_synth;
-    static q::basic_pulse_osc pulse_synth;
+    static WaveSynth wave_synth;
     static NoiseSynth noise_synth;
     static SvFilter low_pass;
     static SvFilter high_pass;
@@ -71,9 +70,7 @@ void processAudioBlock(
     gate.onset_threshold(trigger);
     gate.release_threshold(q::lin_to_db(trigger) - 12_dB);
 
-    const auto shape = s.shape();
-    triangle_synth.setSkew(shape);
-    pulse_synth.width(shape);
+    wave_synth.setShape(s.waveShape());
     noise_synth.setSampleDuration(s.noiseSampleDuration(pd.get_frequency()));
 
     const auto resonance = s.resonance();
@@ -100,8 +97,7 @@ void processAudioBlock(
             std::lerp(no_envelope, dry_envelope, s.envelopeInfluence());
 
         const auto oscillator_signal =
-            (triangle_synth(phase) * s.triangleMix()) +
-            (pulse_synth(phase) * s.pulseMix()) +
+            (wave_synth(phase) * s.waveMix()) +
             (noise_synth() * s.noiseMix());
         low_pass.update(oscillator_signal);
         high_pass.update(oscillator_signal);
@@ -129,14 +125,13 @@ int main()
     auto& knob_dry = terrarium.knobs[0];
     auto& knob_synth = terrarium.knobs[1];
     auto& knob_trigger = terrarium.knobs[2];
-    auto& knob_shape = terrarium.knobs[3];
+    auto& knob_wave = terrarium.knobs[3];
     auto& knob_filter = terrarium.knobs[4];
     auto& knob_resonance = terrarium.knobs[5];
 
-    auto& toggle_wave1 = terrarium.toggles[0];
-    auto& toggle_wave2 = terrarium.toggles[1];
-    auto& toggle_envelope = terrarium.toggles[2];
-    auto& toggle_modulate = terrarium.toggles[3];
+    auto& toggle_noise = terrarium.toggles[0];
+    auto& toggle_envelope = terrarium.toggles[1];
+    auto& toggle_modulate = terrarium.toggles[2];
 
     auto& stomp_bypass = terrarium.stomps[0];
     auto& stomp_preset = terrarium.stomps[1];
@@ -159,16 +154,11 @@ int main()
         interface_state.setDryRatio(knob_dry.Process());
         interface_state.setSynthRatio(knob_synth.Process());
         trigger_ratio = knob_trigger.Process();
-        interface_state.setShapeRatio(knob_shape.Process());
+        interface_state.setWaveRatio(knob_wave.Process());
         interface_state.setFilterRatio(knob_filter.Process());
         interface_state.setResonanceRatio(knob_resonance.Process());
 
-        const auto w1 = toggle_wave1.Pressed();
-        const auto w2 = toggle_wave2.Pressed();
-        interface_state.setTriangleEnabled(!w1 && !w2);
-        interface_state.setPulseEnabled(!w1 && w2);
-        interface_state.setNoiseEnabled(w1 && !w2);
-
+        interface_state.setNoiseEnabled(toggle_noise.Pressed());
         interface_state.setEnvelopeEnabled(toggle_envelope.Pressed());
         use_modulate = toggle_modulate.Pressed();
 
