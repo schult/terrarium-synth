@@ -7,7 +7,7 @@
 struct Settings
 {
     EffectState preset;
-    float mod_duration = 1000;
+    uint32_t mod_duration = 1000;
 };
 
 Settings loadSettings();

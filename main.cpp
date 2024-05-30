@@ -8,7 +8,7 @@
 #include <q/pitch/pitch_detector.hpp>
 #include <q/support/literals.hpp>
 #include <q/support/pitch_names.hpp>
-#include <q/synth/pulse_osc.hpp>
+#include <q/synth/sin_osc.hpp>
 
 #include <util/Blink.h>
 #include <util/EffectState.h>
@@ -28,8 +28,9 @@ EffectState interface_state;
 EffectState preset_state;
 bool enable_effect = false;
 bool use_preset = false;
-bool use_modulate = false;
-float mod_duration = 1000; // ms
+bool apply_mod = false;
+bool cycle_mod = false;
+uint32_t mod_duration = 1000; // ms
 float trigger_ratio = 1;
 
 void processAudioBlock(
@@ -53,15 +54,21 @@ void processAudioBlock(
     static NoiseSynth noise_synth;
     static SvFilter low_pass;
     static SvFilter high_pass;
-    static uint32_t mod_begin = terrarium.seed.system.GetNow();
+    static uint32_t mod_begin = 0;
 
     const auto now = terrarium.seed.system.GetNow();
     const auto mod_elapsed = (now - mod_begin);
-    const auto mod_ratio =
-        std::clamp((mod_elapsed / mod_duration), 0.0f, 1.0f);
+    float meh = 0;
+    const auto base_frac = static_cast<float>(mod_elapsed) / mod_duration;
+    const auto one_shot_frac = std::clamp(base_frac, 0.0f, 0.5f);
+    const auto cycle_frac = std::modf(base_frac, &meh);
+    const auto mod_phase =
+        q::frac_to_phase(cycle_mod ? cycle_frac : one_shot_frac) -
+        q::frac_to_phase(0.25);
+    const auto mod_ratio = (q::sin(mod_phase) + 1) / 2;
 
     const auto& s =
-        use_modulate ? blended(preset_state, interface_state, mod_ratio) :
+        apply_mod ? blended(preset_state, interface_state, mod_ratio) :
         use_preset ? preset_state :
         interface_state;
 
@@ -132,6 +139,7 @@ int main()
     auto& toggle_noise = terrarium.toggles[0];
     auto& toggle_envelope = terrarium.toggles[1];
     auto& toggle_modulate = terrarium.toggles[2];
+    auto& toggle_cycle = terrarium.toggles[3];
 
     auto& stomp_bypass = terrarium.stomps[0];
     auto& stomp_preset = terrarium.stomps[1];
@@ -160,7 +168,8 @@ int main()
 
         interface_state.setNoiseEnabled(toggle_noise.Pressed());
         interface_state.setEnvelopeEnabled(toggle_envelope.Pressed());
-        use_modulate = toggle_modulate.Pressed();
+        apply_mod = toggle_modulate.Pressed();
+        cycle_mod = toggle_cycle.Pressed();
 
         if (stomp_bypass.RisingEdge())
         {
@@ -170,13 +179,13 @@ int main()
         led_enable.Set(enable_effect ? 1 : 0);
 
 
-        if (use_modulate)
+        if (apply_mod)
         {
             if (stomp_preset.RisingEdge())
             {
                 if (elapsed < 2000)
                 {
-                    mod_duration = elapsed / 2;
+                    mod_duration = elapsed;
                 }
                 last_tap = now;
                 preset_written = false;
@@ -193,7 +202,7 @@ int main()
             else
             {
                 float i = 0;
-                const auto mod_ratio = std::modf(elapsed / (2*mod_duration), &i);
+                const auto mod_ratio = std::modf((float)elapsed / mod_duration, &i);
                 const auto brightness = std::abs(2*mod_ratio - 1);
                 led_preset.Set(brightness);
             }
