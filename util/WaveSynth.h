@@ -18,34 +18,40 @@ public:
     // 2.0 - 3.0: Triangle - Sawtooth
     constexpr void setShape(float shape)
     {
+        shape = std::clamp(shape, 0.0f, 3.0f);
+
         using cycfi::q::frac_to_phase;
         using std::lerp;
 
-        shape = std::clamp(shape, 0.0f, 3.0f);
-
         if (shape <= 1) // Pulse (0.0) to Square (1.0)
         {
-            _low_end = frac_to_phase(lerp(0.47f, 0.25f, shape));
+            const auto t = shape;
+            _low_end = frac_to_phase(lerp(0.47f, 0.25f, t));
             _rise_end = _low_end;
-            _high_end = frac_to_phase(lerp(0.53f, 0.75f, shape));
+            _high_end = frac_to_phase(lerp(0.53f, 0.75f, t));
             _fall_end = _high_end;
         }
         else if (shape <= 2) // Square (1.0) to Triangle (2.0)
         {
-            shape -= 1;
-            _low_end = frac_to_phase(lerp(0.25f, 0.0f, shape));
-            _rise_end = frac_to_phase(lerp(0.25f, 0.5f, shape));
-            _high_end = frac_to_phase(lerp(0.75f, 0.5f, shape));
-            _fall_end = frac_to_phase(lerp(0.75f, 1.0f, shape));
+            const auto t = shape - 1;
+            _low_end = frac_to_phase(lerp(0.25f, 0.0f, t));
+            _rise_end = frac_to_phase(lerp(0.25f, 0.5f, t));
+            _high_end = frac_to_phase(lerp(0.75f, 0.5f, t));
+            _fall_end = frac_to_phase(lerp(0.75f, 1.0f, t));
         }
         else // Triangle (2.0) to Sawtooth (3.0)
         {
-            shape -= 2;
+            const auto t = shape - 2;
             _low_end = frac_to_phase(0.0f);
-            _rise_end = frac_to_phase(lerp(0.5f, 1.0f, shape));
+            _rise_end = frac_to_phase(lerp(0.5f, 1.0f, t));
             _high_end = _rise_end;
             _fall_end = frac_to_phase(1.0f);
         }
+
+        // Triangle waves are quieter than everything else, so boost them.
+        const auto x = shape - 2;
+        const auto ratio = 1 - std::clamp(x*x, 0.0f, 1.0f);
+        _boost = (2 * ratio) + 1;
     }
 
     constexpr float operator()(cycfi::q::phase p) const
@@ -98,9 +104,20 @@ public:
         return (*this)(i._phase);
     }
 
+    constexpr float compensated(cycfi::q::phase p) const
+    {
+        return (*this)(p) * _boost;
+    }
+
+    constexpr float compensated(cycfi::q::phase_iterator i) const
+    {
+        return (*this)(i) * _boost;
+    }
+
 private:
     cycfi::q::phase _low_end;
     cycfi::q::phase _rise_end;
     cycfi::q::phase _high_end;
     cycfi::q::phase _fall_end;
+    float _boost;
 };

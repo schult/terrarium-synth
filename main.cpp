@@ -97,7 +97,7 @@ void processAudioBlock(
             std::lerp(no_envelope, dry_envelope, s.envelopeInfluence());
 
         const auto oscillator_signal =
-            (wave_synth(phase) * s.waveMix()) +
+            (wave_synth.compensated(phase) * s.waveMix()) +
             (noise_synth() * s.noiseMix());
         low_pass.update(oscillator_signal);
         high_pass.update(oscillator_signal);

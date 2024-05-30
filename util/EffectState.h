@@ -21,7 +21,7 @@ public:
     float synthLevel() const { return synth_mapping(_synth_ratio); }
     float waveShape() const { return wave_mapping(_wave_ratio); }
     float resonance() const { return resonance_mapping(_resonance_ratio); }
-    float waveMix() const { return 1 - _noise_ratio; }
+    float waveMix() const { return (1 - _noise_ratio); }
     float noiseMix() const { return _noise_ratio; }
     float envelopeInfluence() const { return _envelope_ratio; }
 
@@ -69,7 +69,7 @@ private:
     static constexpr LogMapping dry_mapping{0, 1, max_level};
     static constexpr LogMapping synth_mapping{0, 1, max_level};
     // wave_mapping goes a little beyond 3 to make sure we can reach a full
-    // sawtooth wave even if the knob doesn't quite reach 1.0 when maxed out.
+    // sawtooth wave even if the knob doesn't quite hit 1.0 when maxed out.
     static constexpr LinearMapping wave_mapping{0, 3.1};
     static constexpr LinearMapping noise_freq_mapping{64, 3200};
     static constexpr LogMapping low_pass_mapping{2, 200};
