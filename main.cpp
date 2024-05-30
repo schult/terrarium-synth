@@ -181,7 +181,7 @@ int main()
             {
                 if (elapsed < 2000)
                 {
-                    mod_duration = elapsed;
+                    mod_duration = elapsed / 2;
                 }
                 last_tap = now;
                 preset_written = false;
@@ -198,7 +198,7 @@ int main()
             else
             {
                 float i = 0;
-                const auto mod_ratio = std::modf(elapsed / mod_duration, &i);
+                const auto mod_ratio = std::modf(elapsed / (2*mod_duration), &i);
                 const auto brightness = std::abs(2*mod_ratio - 1);
                 led_preset.Set(brightness);
             }
