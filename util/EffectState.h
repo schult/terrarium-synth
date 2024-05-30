@@ -1,7 +1,6 @@
 #pragma once
 
 #include <algorithm>
-#include <type_traits>
 
 #include <q/detail/fast_math.hpp>
 
@@ -64,22 +63,6 @@ public:
         return (_filter_ratio < 0.5) ? 0 : 1;
     }
 
-    EffectState clamped() const
-    {
-        using std::clamp;
-        EffectState s;
-        s._dry_ratio = clamp(_dry_ratio, ratio_min, ratio_max);
-        s._synth_ratio = clamp(_synth_ratio, ratio_min, ratio_max);
-        s._shape_ratio = clamp(_shape_ratio, ratio_min, ratio_max);
-        s._filter_ratio = clamp(_filter_ratio, ratio_min, ratio_max);
-        s._resonance_ratio = clamp(_resonance_ratio, ratio_min, ratio_max);
-        s._triangle_ratio = clamp(_triangle_ratio, ratio_min, ratio_max);
-        s._pulse_ratio = clamp(_pulse_ratio, ratio_min, ratio_max);
-        s._noise_ratio = clamp(_noise_ratio, ratio_min, ratio_max);
-        s._envelope_ratio = clamp(_envelope_ratio, ratio_min, ratio_max);
-        return s;
-    }
-
     static constexpr float max_level = 20;
 
 private:
@@ -107,8 +90,6 @@ private:
     float _noise_ratio = ratio_min;
     float _envelope_ratio = ratio_min;
 };
-
-static_assert(std::is_trivially_copyable_v<EffectState>);
 
 constexpr EffectState blended(
     const EffectState& s1, const EffectState& s2, float ratio)

@@ -15,6 +15,7 @@
 #include <util/LinearRamp.h>
 #include <util/Mapping.h>
 #include <util/NoiseSynth.h>
+#include <util/PersistentSettings.h>
 #include <util/SvFilter.h>
 #include <util/Terrarium.h>
 #include <util/TriangleSynth.h>
@@ -25,14 +26,12 @@ using namespace q::literals;
 Terrarium terrarium;
 EffectState interface_state;
 EffectState preset_state;
-EffectState DSY_QSPI_BSS saved_preset;
 bool enable_effect = false;
 bool use_preset = false;
 bool use_modulate = false;
 float mod_duration = 1000; // ms
 float trigger_ratio = 1;
 
-//=============================================================================
 void processAudioBlock(
     daisy::AudioHandle::InputBuffer in,
     daisy::AudioHandle::OutputBuffer out,
@@ -119,10 +118,13 @@ void processAudioBlock(
     }
 }
 
-//=============================================================================
 int main()
 {
     terrarium.Init(true);
+
+    auto settings = loadSettings();
+    preset_state = settings.preset;
+    mod_duration = settings.mod_duration;
 
     auto& knob_dry = terrarium.knobs[0];
     auto& knob_synth = terrarium.knobs[1];
@@ -142,7 +144,6 @@ int main()
     auto& led_enable = terrarium.leds[0];
     auto& led_preset = terrarium.leds[1];
 
-    preset_state = saved_preset.clamped();
     bool preset_written = false;
     Blink blink;
 
@@ -229,11 +230,9 @@ int main()
         {
             preset_state = interface_state;
 
-            const auto data = reinterpret_cast<uint8_t*>(&preset_state);
-            const auto size = static_cast<uint32_t>(sizeof(preset_state));
-            const auto start_addr = reinterpret_cast<uint32_t>(&saved_preset);
-            terrarium.seed.qspi.Erase(start_addr, start_addr+size);
-            terrarium.seed.qspi.Write(start_addr, size, data);
+            settings.preset = preset_state;
+            settings.mod_duration = mod_duration;
+            saveSettings(terrarium.seed.qspi, settings);
 
             preset_written = true;
             blink.reset();

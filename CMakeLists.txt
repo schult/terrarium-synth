@@ -12,6 +12,8 @@ set(FIRMWARE_SOURCES
     util/LinearRamp.h
     util/Mapping.h
     util/NoiseSynth.h
+    util/PersistentSettings.h
+    util/PersistentSettings.cpp
     util/SvFilter.h
     util/Terrarium.h
     util/Terrarium.cpp

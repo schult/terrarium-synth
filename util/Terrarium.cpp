@@ -1,6 +1,5 @@
 #include "Terrarium.h"
 
-//=============================================================================
 void Terrarium::Init(bool boost)
 {
     seed.Init(boost);
@@ -10,7 +9,6 @@ void Terrarium::Init(bool boost)
     InitLeds();
 }
 
-//=============================================================================
 void Terrarium::Loop(float frequency, std::function<void()> callback)
 {
     for (auto& knob : knobs)
@@ -40,7 +38,6 @@ void Terrarium::Loop(float frequency, std::function<void()> callback)
     }
 }
 
-//=============================================================================
 void Terrarium::InitKnobs()
 {
     constexpr std::array<daisy::Pin, knob_count> knob_pins{
@@ -68,7 +65,6 @@ void Terrarium::InitKnobs()
     }
 }
 
-//=============================================================================
 void Terrarium::InitToggles()
 {
     constexpr std::array<daisy::Pin, toggle_count> toggle_pins{
@@ -84,7 +80,6 @@ void Terrarium::InitToggles()
     }
 }
 
-//=============================================================================
 void Terrarium::InitStomps()
 {
     constexpr std::array<daisy::Pin, stomp_count> stomp_pins{
@@ -98,7 +93,6 @@ void Terrarium::InitStomps()
     }
 }
 
-//=============================================================================
 void Terrarium::InitLeds()
 {
     constexpr std::array<daisy::DacHandle::Channel, led_count> led_dacs{

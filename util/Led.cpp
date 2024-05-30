@@ -1,6 +1,5 @@
 #include "Led.h"
 
-//=============================================================================
 void Led::Init(daisy::DacHandle::Channel channel)
 {
     _channel = channel;
@@ -13,7 +12,6 @@ void Led::Init(daisy::DacHandle::Channel channel)
     _dac.Init(config);
 }
 
-//=============================================================================
 void Led::Set(float brightness)
 {
     if (brightness > 0)
