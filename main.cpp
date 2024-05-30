@@ -237,5 +237,12 @@ int main()
             preset_written = true;
             blink.reset();
         }
+
+        if ((elapsed > 10000) && (mod_duration != settings.mod_duration))
+        {
+            settings.preset = preset_state;
+            settings.mod_duration = mod_duration;
+            saveSettings(terrarium.seed.qspi, settings);
+        }
     });
 }
