@@ -55,6 +55,7 @@ void processAudioBlock(
     static SvFilter low_pass;
     static SvFilter high_pass;
     static uint32_t mod_begin = 0;
+    static LinearRamp mod_ramp(0, 0.02);
 
     const auto now = terrarium.seed.system.GetNow();
     const auto mod_elapsed = (now - mod_begin);
@@ -65,7 +66,7 @@ void processAudioBlock(
     const auto mod_phase =
         q::frac_to_phase(cycle_mod ? cycle_frac : one_shot_frac) -
         q::frac_to_phase(0.25);
-    const auto mod_ratio = (q::sin(mod_phase) + 1) / 2;
+    const auto mod_ratio = mod_ramp((q::sin(mod_phase) + 1) / 2);
 
     const auto& s =
         apply_mod ? blended(preset_state, interface_state, mod_ratio) :
