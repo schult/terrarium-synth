@@ -46,8 +46,8 @@ void processAudioBlock(
 
     static q::peak_envelope_follower envelope_follower(10_ms, sample_rate);
     static q::noise_gate gate(-120_dB);
-    static q::rising_edge edge;
-    static LinearRamp ramp(0, 0.008);
+    static q::rising_edge gate_rising;
+    static LinearRamp gate_ramp(0, 0.008);
     static q::pitch_detector pd(min_freq, max_freq, sample_rate, hysteresis);
     static q::phase_iterator phase;
     static WaveSynth wave_synth;
@@ -92,14 +92,20 @@ void processAudioBlock(
         if (pd(dry_signal))
         {
             phase.set(pd.get_frequency(), sample_rate);
-            if (pd.is_note_shift()) mod_begin = terrarium.seed.system.GetNow();
+            if (pd.is_note_shift())
+            {
+                mod_begin = terrarium.seed.system.GetNow();
+            }
         }
 
         const auto no_envelope = 1 / EffectState::max_level;
         const auto dry_envelope = envelope_follower(std::abs(dry_signal));
         const auto gate_state = gate(dry_envelope);
-        if (edge(gate_state)) mod_begin = terrarium.seed.system.GetNow();
-        const auto gate_level = ramp(gate_state ? 1 : 0);
+        if (gate_rising(gate_state))
+        {
+            mod_begin = terrarium.seed.system.GetNow();
+        }
+        const auto gate_level = gate_ramp(gate_state ? 1 : 0);
         const auto synth_envelope = gate_level *
             std::lerp(no_envelope, dry_envelope, s.envelopeInfluence());
 
