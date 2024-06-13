@@ -38,8 +38,8 @@ void processAudioBlock(
     daisy::AudioHandle::OutputBuffer out,
     size_t size)
 {
-    static constexpr auto min_freq = q::pitch_names::E[2];
-    static constexpr auto max_freq = q::pitch_names::C[7];
+    static constexpr auto min_freq = q::pitch_names::Ds[2];
+    static constexpr auto max_freq = q::pitch_names::F[6];
     static constexpr auto hysteresis = -35_dB;
 
     static const auto sample_rate = terrarium.seed.AudioSampleRate();
