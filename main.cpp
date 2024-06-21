@@ -17,6 +17,7 @@
 #include <util/NoiseSynth.h>
 #include <util/PersistentSettings.h>
 #include <util/SvFilter.h>
+#include <util/TapTempo.h>
 #include <util/Terrarium.h>
 #include <util/WaveSynth.h>
 
@@ -157,14 +158,13 @@ int main()
     bool preset_written = false;
     Blink blink;
 
-    uint32_t last_tap = 0;
+    TapTempo tempo(mod_duration);
 
 
     terrarium.seed.StartAudio(processAudioBlock);
 
     terrarium.Loop(100, [&](){
-        const auto now = terrarium.seed.system.GetNow();
-        const auto elapsed = now - last_tap;
+        tempo.Update(terrarium.seed.system.GetNow());
 
         interface_state.setDryRatio(knob_dry.Process());
         interface_state.setSynthRatio(knob_synth.Process());
@@ -190,11 +190,8 @@ int main()
         {
             if (stomp_preset.RisingEdge())
             {
-                if (elapsed < 2000)
-                {
-                    mod_duration = elapsed;
-                }
-                last_tap = now;
+                tempo.Tap();
+                mod_duration = tempo.Interval();
                 preset_written = false;
             }
 
@@ -208,9 +205,7 @@ int main()
             }
             else
             {
-                float i = 0;
-                const auto mod_ratio = std::modf((float)elapsed / mod_duration, &i);
-                const auto brightness = std::abs(2*mod_ratio - 1);
+                const auto brightness = std::abs(2*tempo.Ratio() - 1);
                 led_preset.Set(brightness);
             }
         }
@@ -244,7 +239,7 @@ int main()
             blink.reset();
         }
 
-        if ((elapsed > 10000) && (mod_duration != settings.mod_duration))
+        if ((tempo.SinceTap() > 10000) && (mod_duration != settings.mod_duration))
         {
             settings.preset = preset_state;
             settings.mod_duration = mod_duration;

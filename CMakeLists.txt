@@ -15,6 +15,7 @@ set(FIRMWARE_SOURCES
     util/PersistentSettings.h
     util/PersistentSettings.cpp
     util/SvFilter.h
+    util/TapTempo.h
     util/Terrarium.h
     util/Terrarium.cpp
     util/WaveSynth.h
