@@ -74,7 +74,7 @@ void processAudioBlock(
         use_preset ? preset_state :
         interface_state;
 
-    constexpr LogMapping trigger_mapping{0.0001, 0.1, 0.75};
+    constexpr LogMapping trigger_mapping{0.0001, 0.05, 0.4};
     const auto trigger = trigger_mapping(trigger_ratio);
     gate.onset_threshold(trigger);
     gate.release_threshold(q::lin_to_db(trigger) - 12_dB);
